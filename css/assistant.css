@@ -1,0 +1,456 @@
+/* ============================================================================
+   assistant.css — "Ask Anatomy101" biology assistant panel.
+   Loaded on demand by js/assistant.js; reuses the liquid-glass tokens
+   from styles.css so it sits in the same visual family as the sidebar.
+   ============================================================================ */
+
+/* ── Nav trigger ───────────────────────────────────────────────────────────── */
+
+.nav-ai {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 14px 7px 11px;
+  border: 1px solid rgba(167, 139, 250, 0.30);
+  border-radius: 99px;
+  background: rgba(167, 139, 250, 0.10);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: var(--fw-semi);
+  letter-spacing: var(--tracking-snug);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background var(--dur-fast) var(--ease),
+              border-color var(--dur-fast) var(--ease),
+              transform var(--dur-fast) var(--ease);
+}
+
+.nav-ai:hover {
+  background: rgba(167, 139, 250, 0.18);
+  border-color: rgba(167, 139, 250, 0.50);
+  transform: translateY(-1px);
+}
+
+.nav-ai svg { width: 15px; height: 15px; flex: none; color: var(--accent-purple); }
+
+.nav-mobile-menu .nav-ai {
+  width: 100%;
+  justify-content: center;
+  margin-top: 6px;
+}
+
+/* Matches the 760px breakpoint in pages.css that swaps nav-links for the
+   burger — on small screens the trigger lives inside the dropdown only. */
+@media (max-width: 760px) {
+  .nav-right .nav-ai { display: none; }
+}
+
+/* ── Scrim ─────────────────────────────────────────────────────────────────── */
+
+#ai-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 199;
+  background: rgba(4, 6, 10, 0.55);
+  backdrop-filter: blur(2px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--dur-mid) var(--ease);
+}
+
+#ai-scrim.open { opacity: 1; pointer-events: auto; }
+
+/* ── Panel ─────────────────────────────────────────────────────────────────── */
+
+#ai-panel {
+  position: fixed;
+  z-index: 200;
+  top: 16px;
+  right: 16px;
+  bottom: 16px;
+  width: 420px;
+  max-width: calc(100vw - 32px);
+
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+
+  background: rgba(10, 13, 20, 0.88);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: var(--glass-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--glass-shadow);
+
+  transform: translateX(24px) scale(0.98);
+  opacity: 0;
+  pointer-events: none;
+  transition: transform var(--dur-mid) var(--ease-slide),
+              opacity var(--dur-mid) var(--ease);
+}
+
+#ai-panel.open {
+  transform: translateX(0) scale(1);
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* ── Header ────────────────────────────────────────────────────────────────── */
+
+.ai-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  padding: 14px 14px 12px 18px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  background: var(--glass-specular);
+}
+
+.ai-head-brand { display: flex; align-items: center; gap: 11px; }
+
+.ai-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--accent-purple);
+  box-shadow: 0 0 0 4px rgba(167, 139, 250, 0.16);
+  flex: none;
+}
+
+.ai-title {
+  font-family: var(--font-brand);
+  font-size: var(--text-md);
+  font-weight: var(--fw-semi);
+  letter-spacing: var(--tracking-snug);
+  color: var(--text-primary);
+}
+
+/* Free-message counter — greens down to amber, then red when spent */
+.ai-quota {
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  margin-top: 2px;
+}
+
+.ai-quota.low   { color: #f0b429; }
+.ai-quota.spent { color: var(--brand); }
+
+.ai-head-actions { display: flex; gap: 4px; }
+
+.ai-icon-btn {
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  transition: background var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
+}
+
+.ai-icon-btn:hover { background: var(--glass-bg-hover); color: var(--text-primary); }
+.ai-icon-btn svg { width: 15px; height: 15px; }
+
+/* ── Message list ──────────────────────────────────────────────────────────── */
+
+.ai-list {
+  flex: 1;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: var(--sp-3) var(--sp-3) var(--sp-2);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.ai-msg { display: flex; }
+.ai-msg.ai-user { justify-content: flex-end; }
+.ai-msg.ai-bot  { justify-content: flex-start; }
+
+.ai-bubble {
+  max-width: 88%;
+  padding: 10px 13px;
+  border-radius: var(--radius);
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  line-height: var(--lh-base);
+  color: var(--text-primary);
+  word-wrap: break-word;
+  animation: ai-rise var(--dur-mid) var(--ease-slide);
+}
+
+@keyframes ai-rise {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.ai-user .ai-bubble {
+  background: rgba(224, 90, 90, 0.16);
+  border: 1px solid rgba(224, 90, 90, 0.24);
+  border-bottom-right-radius: 6px;
+}
+
+.ai-bot .ai-bubble {
+  background: rgba(255, 255, 255, 0.045);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-bottom-left-radius: 6px;
+  color: var(--text-primary);
+}
+
+.ai-bubble p { margin: 0 0 8px; }
+.ai-bubble p:last-child { margin-bottom: 0; }
+
+.ai-bubble h4 {
+  font-family: var(--font-brand);
+  font-size: var(--text-md);
+  font-weight: var(--fw-semi);
+  letter-spacing: var(--tracking-snug);
+  margin: 10px 0 6px;
+}
+.ai-bubble h4:first-child { margin-top: 0; }
+
+.ai-bubble ul,
+.ai-bubble ol { margin: 6px 0 8px; padding-left: 18px; }
+.ai-bubble li { margin-bottom: 4px; }
+.ai-bubble li::marker { color: var(--accent-purple); }
+
+.ai-bubble strong { font-weight: var(--fw-semi); color: #fff; }
+
+.ai-bubble code {
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 0.92em;
+  padding: 1px 5px;
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--accent-teal);
+}
+
+.ai-error { color: var(--brand); font-size: var(--text-sm); line-height: var(--lh-sm); }
+
+/* Typing indicator */
+.ai-typing { display: inline-flex; gap: 4px; align-items: center; padding: 2px 0; }
+.ai-typing i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--text-tertiary);
+  animation: ai-blink 1.3s infinite ease-in-out;
+}
+.ai-typing i:nth-child(2) { animation-delay: 0.18s; }
+.ai-typing i:nth-child(3) { animation-delay: 0.36s; }
+
+@keyframes ai-blink {
+  0%, 60%, 100% { opacity: 0.25; transform: translateY(0); }
+  30%           { opacity: 1;    transform: translateY(-3px); }
+}
+
+/* ── Empty state ───────────────────────────────────────────────────────────── */
+
+.ai-empty {
+  margin: auto 0;
+  padding: var(--sp-3) 6px;
+  text-align: center;
+}
+
+.ai-empty-orb {
+  width: 54px;
+  height: 54px;
+  margin: 0 auto 16px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 32% 30%, rgba(167, 139, 250, 0.85), rgba(91, 140, 255, 0.18) 60%, transparent 72%);
+  box-shadow: 0 0 40px rgba(167, 139, 250, 0.30);
+  animation: ai-float 5s ease-in-out infinite;
+}
+
+@keyframes ai-float {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-6px); }
+}
+
+.ai-empty h3 {
+  font-family: var(--font-brand);
+  font-size: var(--text-lg);
+  font-weight: var(--fw-semi);
+  letter-spacing: var(--tracking-tight);
+  color: var(--text-primary);
+  margin-bottom: 6px;
+}
+
+.ai-empty p {
+  font-size: var(--text-sm);
+  line-height: var(--lh-sm);
+  color: var(--text-tertiary);
+  max-width: 30ch;
+  margin: 0 auto 18px;
+}
+
+/* Allowance warning in the empty state */
+.ai-warn {
+  display: inline-block;
+  padding: 7px 13px;
+  margin-bottom: 16px;
+  border: 1px solid rgba(240, 180, 41, 0.28);
+  border-radius: 99px;
+  background: rgba(240, 180, 41, 0.10);
+  color: #f0b429;
+  font-size: var(--text-xs);
+  line-height: var(--lh-xs);
+}
+
+.ai-warn strong { font-weight: var(--fw-bold); color: #ffd166; }
+
+.ai-warn.spent {
+  border-color: rgba(224, 90, 90, 0.30);
+  background: var(--brand-dim);
+  color: var(--brand);
+}
+
+.ai-chips { display: flex; flex-direction: column; gap: 7px; }
+
+.ai-chip {
+  width: 100%;
+  padding: 9px 13px;
+  text-align: left;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius);
+  background: var(--glass-bg);
+  color: var(--text-secondary);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  line-height: var(--lh-sm);
+  cursor: pointer;
+  transition: background var(--dur-fast) var(--ease),
+              border-color var(--dur-fast) var(--ease),
+              color var(--dur-fast) var(--ease);
+}
+
+.ai-chip:hover:not(:disabled) {
+  background: var(--glass-bg-hover);
+  border-color: rgba(167, 139, 250, 0.35);
+  color: var(--text-primary);
+}
+
+.ai-chip:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  color: var(--text-muted);
+}
+
+/* ── Composer ──────────────────────────────────────────────────────────────── */
+
+.ai-compose {
+  padding: 12px var(--sp-3) 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.ai-input-wrap {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  padding: 7px 7px 7px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, 0.04);
+  transition: border-color var(--dur-fast) var(--ease);
+}
+
+.ai-input-wrap:focus-within { border-color: rgba(167, 139, 250, 0.45); }
+
+/* Allowance spent — whole composer greys out and stops accepting input */
+.ai-limit-note {
+  margin: 0 0 10px;
+  padding: 8px 12px;
+  border: 1px solid rgba(224, 90, 90, 0.28);
+  border-radius: var(--radius-sm);
+  background: var(--brand-dim);
+  color: var(--brand);
+  font-size: var(--text-xs);
+  line-height: var(--lh-xs);
+  text-align: center;
+}
+
+.ai-compose.locked .ai-input-wrap {
+  opacity: 0.45;
+  background: rgba(255, 255, 255, 0.02);
+  border-color: rgba(255, 255, 255, 0.06);
+}
+
+.ai-compose.locked #ai-input { cursor: not-allowed; }
+.ai-compose.locked #ai-send  { background: var(--text-muted); }
+
+#ai-input {
+  flex: 1;
+  border: none;
+  outline: none;
+  resize: none;
+  background: transparent;
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  line-height: var(--lh-base);
+  max-height: 140px;
+  padding: 5px 0;
+}
+
+#ai-input::placeholder { color: var(--text-muted); }
+
+#ai-send {
+  flex: none;
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border: none;
+  border-radius: 10px;
+  background: var(--brand);
+  color: #fff;
+  cursor: pointer;
+  transition: opacity var(--dur-fast) var(--ease), transform var(--dur-fast) var(--ease);
+}
+
+#ai-send:hover:not(:disabled) { transform: scale(1.06); }
+#ai-send:disabled { opacity: 0.35; cursor: not-allowed; }
+#ai-send svg { width: 16px; height: 16px; }
+
+.ai-disclaimer {
+  margin-top: 9px;
+  font-size: var(--text-xs);
+  line-height: var(--lh-xs);
+  color: var(--text-muted);
+  text-align: center;
+}
+
+/* ── Mobile — bottom sheet, matching the sidebar's mobile treatment ────────── */
+
+@media (max-width: 768px) {
+  #ai-panel {
+    top: auto;
+    right: 0;
+    left: 0;
+    bottom: 0;
+    width: 100%;
+    max-width: 100%;
+    height: 86vh;
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    border-bottom: none;
+    transform: translateY(100%);
+  }
+
+  #ai-panel.open { transform: translateY(0); }
+
+  .ai-bubble { max-width: 92%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #ai-panel,
+  #ai-scrim,
+  .ai-bubble,
+  .ai-empty-orb,
+  .ai-typing i { transition: none; animation: none; }
+}

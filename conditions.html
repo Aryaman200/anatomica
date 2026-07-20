@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#090c11" />
+
+  <!-- Primary SEO -->
+  <title>Medical Conditions & Diseases Mapped to the Body | Anatomy101</title>
+  <meta name="description" content="Browse hundreds of medical conditions mapped to human anatomy. Explore symptoms, affected organs, and visualise diseases on a 3D body model. Free for students and professionals." />
+  <meta name="keywords" content="medical conditions anatomy, diseases body map, human body conditions, anatomy disease explorer, organ diseases, medical conditions list, body system diseases, NEET biology conditions" />
+  <meta name="author" content="Anatomy101" />
+  <meta name="robots" content="index, follow" />
+  <link rel="canonical" href="https://www.anatomy101.in/conditions.html" />
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://www.anatomy101.in/conditions.html" />
+  <meta property="og:title" content="Medical Conditions Mapped to the Body | Anatomy101" />
+  <meta property="og:description" content="Browse hundreds of medical conditions mapped to human anatomy. Explore symptoms and visualise diseases on a 3D body model." />
+  <meta property="og:image" content="https://www.anatomy101.in/assets/icon.png" />
+  <meta property="og:site_name" content="Anatomy101" />
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Medical Conditions Mapped to the Body | Anatomy101" />
+  <meta name="twitter:description" content="Browse hundreds of medical conditions mapped to human anatomy. Explore symptoms and visualise diseases on a 3D body model." />
+  <meta name="twitter:image" content="https://www.anatomy101.in/assets/icon.png" />
+
+  <!-- JSON-LD -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "name": "Medical Conditions Library",
+    "description": "Browse hundreds of medical conditions mapped to human anatomy.",
+    "url": "https://www.anatomy101.in/conditions.html",
+    "isPartOf": { "@type": "WebSite", "name": "Anatomy101", "url": "https://www.anatomy101.in" }
+  }
+  </script>
+
+  <link rel="icon" type="image/svg+xml" href="assets/icon.svg">
+  <link rel="icon" type="image/x-icon" href="assets/icon.ico">
+  <link rel="apple-touch-icon" href="assets/icon.png">
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="stylesheet" href="css/pages.css" />
+</head>
+
+<body class="page-body">
+  <header id="site-header"></header>
+
+  <main class="page-wrap">
+    <div class="page-kicker">Condition library</div>
+    <h1 class="page-title">Conditions</h1>
+    <p class="page-sub">Conditions explained in plain language and mapped to the body. Open any one to see what it affects, walk through it step by step, and view it lit up in the interactive 3D body.</p>
+
+    <section class="featured-section" id="featured" hidden>
+      <div class="chip-group-label">Featured</div>
+      <div class="featured-rail" id="featured-rail"></div>
+    </section>
+
+    <div class="filter-bar">
+      <div class="page-search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7" /><path d="M21 21l-4.35-4.35" /></svg>
+        <input id="cond-search" type="text" placeholder="Search conditions…" autocomplete="off" spellcheck="false" />
+      </div>
+      <div class="chip-group">
+        <div class="chip-group-label">Severity</div>
+        <div class="chip-row" id="chip-severity"></div>
+      </div>
+      <div class="chip-group">
+        <div class="chip-group-label">Category</div>
+        <div class="chip-row" id="chip-category"></div>
+      </div>
+    </div>
+
+    <div class="results-count" id="results-count"></div>
+    <div class="card-grid" id="cond-grid"></div>
+    <div class="empty-state" id="empty-state" style="display:none;">No conditions match your filters.</div>
+  </main>
+
+  <footer id="site-footer"></footer>
+
+  <script type="module" src="js/page-conditions.js"></script>
+</body>
+
+</html>

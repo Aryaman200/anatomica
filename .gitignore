@@ -1,0 +1,53 @@
+# ── Dependencies ──────────────────────────────────────────────────────────────
+node_modules/
+
+# Environment & secrets ─────────────────────────────────────────────────────
+.env
+.env.*
+!.env.example
+
+# ai-config.js is now tracked (key is base64-encoded, free-tier only)
+# js/ai-config.js
+
+# ── Logs ──────────────────────────────────────────────────────────────────────
+*.log
+logs/
+npm-debug.log*
+
+# ── Generated / build artefacts ───────────────────────────────────────────────
+# Large generated JSON from GLB extraction (not needed in repo)
+docs/glb-node-names.json
+docs/anatomy-taxonomy.json
+
+# Raw NEET question source files — only quiz-data.js + metadata.json are needed
+neet-biology-db/analytics/
+neet-biology-db/graph/
+neet-biology-db/indexes/
+neet-biology-db/questions/
+
+# ── Editor & IDE ──────────────────────────────────────────────────────────────
+.vscode/
+!.vscode/extensions.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Claude / AI editor config
+.claude/
+
+# ── OS junk ───────────────────────────────────────────────────────────────────
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+
+# ── Misc ──────────────────────────────────────────────────────────────────────
+*.bak
+*.tmp

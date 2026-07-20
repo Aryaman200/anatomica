@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#090c11" />
+
+  <!-- Primary SEO -->
+  <title>Medications & Drugs Mapped to Organs | Anatomy101</title>
+  <meta name="description" content="Explore medications mapped to the organs and body systems they act on. Understand drug mechanisms visually on a 3D human body model. Essential for pharmacology and NEET students." />
+  <meta name="keywords" content="medications anatomy, drug organ mapping, pharmacology body map, drugs and organs, medication explorer, NEET pharmacology, organ-specific drugs, drug mechanisms anatomy" />
+  <meta name="author" content="Anatomy101" />
+  <meta name="robots" content="index, follow" />
+  <link rel="canonical" href="https://www.anatomy101.in/medications.html" />
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://www.anatomy101.in/medications.html" />
+  <meta property="og:title" content="Medications Mapped to Organs | Anatomy101" />
+  <meta property="og:description" content="Explore medications mapped to organs they act on. Understand drug mechanisms on a 3D human body." />
+  <meta property="og:image" content="https://www.anatomy101.in/assets/icon.png" />
+  <meta property="og:site_name" content="Anatomy101" />
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Medications Mapped to Organs | Anatomy101" />
+  <meta name="twitter:description" content="Explore medications mapped to organs they act on. Understand drug mechanisms on a 3D human body." />
+  <meta name="twitter:image" content="https://www.anatomy101.in/assets/icon.png" />
+
+  <!-- JSON-LD -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "name": "Medications Library",
+    "description": "Explore medications mapped to the organs and body systems they act on.",
+    "url": "https://www.anatomy101.in/medications.html",
+    "isPartOf": { "@type": "WebSite", "name": "Anatomy101", "url": "https://www.anatomy101.in" }
+  }
+  </script>
+
+  <link rel="icon" type="image/svg+xml" href="assets/icon.svg">
+  <link rel="icon" type="image/x-icon" href="assets/icon.ico">
+  <link rel="apple-touch-icon" href="assets/icon.png">
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="stylesheet" href="css/pages.css" />
+</head>
+
+<body class="page-body">
+  <header id="site-header"></header>
+
+  <main class="page-wrap">
+    <div class="page-kicker">Medication library</div>
+    <h1 class="page-title">Medications</h1>
+    <p class="page-sub">Medications mapped to the organs they act on and the conditions they treat. Open any one to see its body map.</p>
+
+    <div class="filter-bar">
+      <div class="page-search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7" /><path d="M21 21l-4.35-4.35" /></svg>
+        <input id="med-search" type="text" placeholder="Search medications…" autocomplete="off" spellcheck="false" />
+      </div>
+      <div class="chip-group">
+        <div class="chip-group-label">Group</div>
+        <div class="chip-row" id="chip-group"></div>
+      </div>
+    </div>
+
+    <div class="results-count" id="results-count"></div>
+    <div class="card-grid" id="med-grid"></div>
+    <div class="empty-state" id="empty-state" style="display:none;">No medications match your filters.</div>
+  </main>
+
+  <footer id="site-footer"></footer>
+
+  <script type="module" src="js/page-medications.js"></script>
+</body>
+
+</html>

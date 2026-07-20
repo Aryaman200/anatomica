@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="google-site-verification" content="ZTWDbaWvNGXym2lCRKVc28ZrYSkOSz9vlWGpuGApG2Y" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#090c11" />
+
+  <!-- Primary SEO -->
+  <title>Anatomy101 — Free Interactive 3D Human Anatomy Atlas</title>
+  <meta name="description" content="Explore a free, interactive 3D human anatomy atlas. Visualise organs, muscles, bones, and body systems in real time. Perfect for medical students, NEET aspirants, and curious minds." />
+  <meta name="keywords" content="3D human anatomy, interactive anatomy atlas, human body 3D model, anatomy for medical students, NEET biology, organ systems, body anatomy online, anatomy viewer, free anatomy tool" />
+  <meta name="author" content="Anatomy101" />
+  <meta name="robots" content="index, follow" />
+  <link rel="canonical" href="https://www.anatomy101.in/" />
+
+  <!-- Open Graph (Facebook / LinkedIn / WhatsApp) -->
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://www.anatomy101.in/" />
+  <meta property="og:title" content="Anatomy101 — Free Interactive 3D Human Anatomy Atlas" />
+  <meta property="og:description" content="Explore a free, interactive 3D human anatomy atlas. Visualise organs, muscles, bones, and body systems in real time. Perfect for medical students and NEET aspirants." />
+  <meta property="og:image" content="https://www.anatomy101.in/assets/icon.png" />
+  <meta property="og:site_name" content="Anatomy101" />
+  <meta property="og:locale" content="en_GB" />
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:url" content="https://www.anatomy101.in/" />
+  <meta name="twitter:title" content="Anatomy101 — Free Interactive 3D Human Anatomy Atlas" />
+  <meta name="twitter:description" content="Explore a free, interactive 3D human anatomy atlas. Visualise organs, muscles, bones, and body systems in real time." />
+  <meta name="twitter:image" content="https://www.anatomy101.in/assets/icon.png" />
+
+  <!-- JSON-LD Structured Data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "Anatomy101",
+    "url": "https://www.anatomy101.in",
+    "description": "Free interactive 3D human anatomy atlas for medical students, NEET aspirants, and curious minds.",
+    "applicationCategory": "EducationalApplication",
+    "operatingSystem": "Web",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "INR"
+    },
+    "audience": {
+      "@type": "EducationalAudience",
+      "educationalRole": "student"
+    }
+  }
+  </script>
+
+  <link rel="icon" type="image/x-icon" href="assets/icon.ico">
+  <link rel="apple-touch-icon" href="assets/icon.png">
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="css/pages.css" />
+  <link rel="stylesheet" href="css/styles.css" />
+  
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+</head>
+
+<body>
+
+  <!-- ── 3D CANVAS ─────────────────────────────────── -->
+  <div id="canvas-wrap">
+    <canvas id="three-canvas"></canvas>
+  </div>
+
+  <!-- ── UNIFIED NAVBAR ────────────────────────────── -->
+  <header id="site-header" role="banner"></header>
+
+  <!-- ── HEADER ACTIONS (theme + render style) ──────── -->
+  <div id="header-actions" role="toolbar" aria-label="Display options">
+    <div class="hdr-menu-wrap">
+      <button id="style-toggle" class="hdr-btn" aria-label="Rendering style" aria-expanded="false">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <circle cx="13.5" cy="6.5" r=".5"/><circle cx="17.5" cy="10.5" r=".5"/><circle cx="8.5" cy="7.5" r=".5"/><circle cx="6.5" cy="12.5" r=".5"/>
+          <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.9 0 1.6-.7 1.6-1.6 0-.4-.2-.8-.4-1.1-.2-.3-.4-.7-.4-1.1 0-.9.7-1.6 1.6-1.6H16c3.3 0 6-2.7 6-6 0-4.4-4.5-8-10-8z"/>
+        </svg>
+      </button>
+      <div id="style-menu" role="menu" aria-label="Rendering style options">
+        <button class="style-opt active" data-style="full" role="menuitemradio" aria-checked="true">
+          <span class="style-opt-name">Full color</span>
+          <span class="style-opt-desc">Every layer solid, in color</span>
+        </button>
+        <button class="style-opt" data-style="xray" role="menuitemradio" aria-checked="false">
+          <span class="style-opt-name">X-ray</span>
+          <span class="style-opt-desc">Reveal the focus through the body</span>
+        </button>
+        <button class="style-opt" data-style="white" role="menuitemradio" aria-checked="false">
+          <span class="style-opt-name">White</span>
+          <span class="style-opt-desc">One clean ivory specimen</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── LIQUID GLASS SEARCH BAR ─────────────────── -->
+  <div id="search-bar" role="search" aria-label="Search anatomy101l structure">
+    <div class="search-pill">
+      <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+        aria-hidden="true">
+        <circle cx="11" cy="11" r="7" />
+        <path d="M21 21l-4.35-4.35" />
+      </svg>
+      <input id="search-input" type="text" placeholder="Search organs, conditions, symptoms…" autocomplete="off"
+        spellcheck="false" aria-autocomplete="list" aria-controls="search-suggestions" />
+      <button id="search-x" aria-label="Clear search">×</button>
+    </div>
+    <div id="search-suggestions" role="listbox" aria-label="Search suggestions"></div>
+    <div id="highlight-bar">
+      <span id="highlight-bar-label"></span>
+      <span id="highlight-bar-clear" role="button" tabindex="0">Clear</span>
+    </div>
+  </div>
+
+  <!-- ── LOADER ─────────────────────────────────────── -->
+  <div id="loader" role="status" aria-live="polite" aria-label="Loading Anatomy101">
+    <div class="ld-orb-wrap" aria-hidden="true">
+      <div class="ld-ring"></div>
+      <div class="ld-ring"></div>
+      <div class="ld-core"></div>
+    </div>
+    <span class="ld-label">Loading Anatomy101</span>
+    <div class="ld-bar-track" aria-hidden="true">
+      <div class="ld-bar" id="ld-bar"></div>
+    </div>
+    <span class="ld-detail" id="ld-detail">Initialising…</span>
+  </div>
+
+  <!-- ── HINT PILL ──────────────────────────────────── -->
+  <div id="hint" aria-hidden="true">
+    Drag to rotate &nbsp;·&nbsp; Scroll to zoom &nbsp;·&nbsp; Right-drag to pan
+  </div>
+
+  <!-- ── SIDEBAR TOGGLE BUTTON ─────────────────────── -->
+  <button id="sidebar-toggle" aria-label="Toggle anatomy sidebar" aria-expanded="true">
+    <svg id="sidebar-toggle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+      <path d="M15 18l-6-6 6-6"/>
+    </svg>
+  </button>
+
+  <!-- ── DETAIL PANEL (click-to-inspect) ────────────── -->
+  <aside id="detail-panel" role="complementary" aria-label="Structure detail" aria-hidden="true">
+    <button id="detail-close" aria-label="Close detail panel">×</button>
+    <div class="dp-scroll" id="dp-scroll" aria-live="polite"></div>
+  </aside>
+
+  <!-- ── SIDEBAR (Liquid Glass) ─────────────────────── -->
+  <aside id="sidebar" role="complementary" aria-label="Body systems and controls">
+    <!-- Header -->
+    <div class="sb-head">
+      <div class="sb-brand">
+        <img class="sb-logo" src="assets/icon.png" aria-hidden="true" alt="">
+        <span class="sb-name">Anatomy101</span>
+      </div>
+      <div class="sb-badge" id="active-count" data-count="3" aria-live="polite">3 active</div>
+    </div>
+
+    <div class="sb-scroll">
+      <!-- Systems -->
+      <div class="sec-label" style="margin-top:4px;" id="systems-section-label">Systems</div>
+      <div class="preset-row" role="group" aria-label="Show or hide all systems">
+        <button class="preset-btn" id="btn-all" aria-label="Show all systems">All</button>
+        <button class="preset-btn" id="btn-none" aria-label="Hide all systems">None</button>
+      </div>
+      <div class="sys-list" id="sys-list" role="list"></div>
+
+      <div class="divider" role="separator"></div>
+
+      <!-- Cross-section -->
+      <div class="cut-wrap">
+        <div class="cut-head">
+          <span class="cut-title">Cross-Section</span>
+          <button class="cut-clear" id="cut-clear" style="display:none;" aria-label="Clear cross-section">Clear</button>
+        </div>
+        <p class="cut-sub">Slice the body along any axis to see inside.</p>
+
+        <div class="cut-tabs" role="group" aria-label="Cross-section axis">
+          <button class="cut-tab" id="cut-front" data-axis="z" aria-pressed="false">Front</button>
+          <button class="cut-tab" id="cut-side" data-axis="x" aria-pressed="false">Side</button>
+          <button class="cut-tab" id="cut-across" data-axis="y" aria-pressed="false">Across</button>
+        </div>
+
+        <div class="cut-controls" id="cut-controls">
+          <div>
+            <div class="slider-label">
+              <span>Depth</span>
+              <span id="depth-pct-label">50%</span>
+            </div>
+            <input type="range" class="depth-slider" id="depth-slider" min="0" max="100" value="50" step="1"
+              aria-label="Cross-section depth" style="margin-top:8px;" />
+          </div>
+          <button class="flip-btn" id="flip-btn" aria-pressed="false">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <path d="M7 16V4m0 0L3 8m4-4l4 4M17 8v12m0 0l4-4m-4 4l-4-4" />
+            </svg>
+            Flip side
+          </button>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ── THREE.JS (ESM importmap) ───────────────────── -->
+  <script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.165.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.165.0/examples/jsm/"
+  }
+}
+  </script>
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
+  <script type="module" src="js/main.js?v=1784447089342"></script>
+  
+  <script type="module">
+    import { renderChrome } from './js/chrome.js';
+    renderChrome('explore');
+  </script>
+</body>
+
+</html>

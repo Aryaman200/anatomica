@@ -1,0 +1,29 @@
+{
+  "name": "model-viewing-site",
+  "version": "1.0.0",
+  "description": "Anatomy101 is a high-fidelity, interactive 3D human body visualization tool. Built with modern web technologies, it allows users to explore, search, slice, and discover anatomy101l structures in incredible detail.",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Aryaman200/anatomy101.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/Aryaman200/anatomy101/issues"
+  },
+  "homepage": "https://github.com/Aryaman200/anatomy101#readme",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.110.7",
+    "mongodb": "^7.5.0",
+    "razorpay": "^2.9.5"
+  }
+}
