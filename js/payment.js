@@ -94,7 +94,7 @@ export async function checkout(tier) {
       currency,
       name: 'Anatomy101',
       description,
-      image: 'https://anatomy101.vercel.app/assets/icon.png', // Fallback icon if local testing
+      image: 'https://anatomy101.in/assets/icon.png',
       order_id: orderId,
       handler: async function (response) {
         // 3. Verify payment on server
