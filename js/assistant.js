@@ -87,7 +87,7 @@ let busy = false;
 let used = 0;           // messages spent against FREE_MESSAGES
 let panel, listEl, inputEl, sendBtn, triggerBtns = [], quotaEl, composeEl;
 
-import { getSession, loginWithGoogle } from './auth.js';
+import { getSession, loginWithGoogle, onAuthStateChange } from './auth.js';
 import { checkout } from './payment.js';
 
 let session = null;
@@ -219,6 +219,13 @@ export async function initAssistant() {
   wireTriggers();
   restore();
   renderQuota();
+
+  // Re-render when GIS popup login completes (session changes without page reload)
+  onAuthStateChange(async (event, newSession) => {
+    session = newSession;
+    await fetchUserState();
+    renderQuota();
+  });
 
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && panel.classList.contains('open')) close();
