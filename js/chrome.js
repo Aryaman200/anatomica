@@ -2,6 +2,10 @@ import { initAssistant } from './assistant.js';
 import { getSession, logout, loginWithGoogle, onAuthStateChange } from './auth.js';
 import { checkout } from './payment.js';
 
+// Escape any server-provided string before it goes into innerHTML.
+const esc = (s) => String(s).replace(/[&<>"']/g, (c) =>
+  ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
 /**
  * Builds the auth slot HTML and wires button events.
  * Called on initial load and again whenever session changes (popup login).
@@ -303,7 +307,7 @@ async function openAccountModal(session) {
     body.innerHTML = `
       <div class="acc-stat">
         <span>Current Tier</span>
-        <span class="acc-badge ${data.tier}">${data.tier}</span>
+        <span class="acc-badge ${esc(data.tier)}">${esc(data.tier)}</span>
       </div>
       <div class="acc-stat">
         <span>Daily AI Messages</span>

@@ -1,4 +1,4 @@
-import { authenticate, supabase } from '../middleware/auth.js';
+import { authenticate, supabase } from '../../lib/auth.js';
 
 export const config = { runtime: 'edge' };
 

@@ -1,4 +1,4 @@
-import { authenticate, supabase } from '../middleware/auth.js';
+import { authenticate, supabase } from '../../lib/auth.js';
 
 export const config = { runtime: 'edge' };
 
@@ -45,36 +45,21 @@ export default async function handler(req) {
     const today = new Date().toISOString().split('T')[0];
     const weekStart = getWeekStart();
 
-    // Check weekly usage
-    const { data: usageLogs } = await supabase
-      .from('usage')
-      .select('id, quizzes_used, date')
-      .eq('user_id', user.id)
-      .eq('week_start', weekStart);
-
-    const totalQuizzesThisWeek = usageLogs ? usageLogs.reduce((acc, row) => acc + row.quizzes_used, 0) : 0;
-
-    if (totalQuizzesThisWeek >= limit) {
-      return new Response(JSON.stringify({ 
-        error: 'LIMIT_REACHED', 
-        message: 'You have reached your weekly quiz limit.',
-        tier 
-      }), { status: 429 });
+    // Atomically enforce the weekly quiz limit and count this quiz in one step
+    // (race-safe — concurrent requests can't slip past the limit together).
+    const { data: allowed, error: consumeErr } = await supabase.rpc('consume_quiz', {
+      p_user: user.id, p_date: today, p_week: weekStart, p_limit: limit
+    });
+    if (consumeErr) {
+      console.error('consume_quiz failed:', consumeErr.message);
+      return new Response(JSON.stringify({ error: 'Server error' }), { status: 500 });
     }
-
-    // Allowed! Increment today's quiz count
-    let todayRecord = usageLogs?.find(row => row.date === today);
-    
-    if (todayRecord) {
-      await supabase.from('usage').update({ quizzes_used: todayRecord.quizzes_used + 1 }).eq('id', todayRecord.id);
-    } else {
-      await supabase.from('usage').insert({
-        user_id: user.id,
-        date: today,
-        week_start: weekStart,
-        quizzes_used: 1,
-        messages_used: 0
-      });
+    if (!allowed) {
+      return new Response(JSON.stringify({
+        error: 'LIMIT_REACHED',
+        message: 'You have reached your weekly quiz limit.',
+        tier
+      }), { status: 429 });
     }
 
     // Log event asynchronously

@@ -1,4 +1,4 @@
-import { authenticate } from '../middleware/auth.js';
+import { authenticate, supabase } from '../../lib/auth.js';
 import Razorpay from 'razorpay';
 
 // Node.js runtime — gives full network access, no Edge fetch restrictions
@@ -20,7 +20,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { tier } = req.body;
+    const { tier } = req.body || {};
     const plan = PLANS[tier];
 
     if (!plan) {
@@ -38,6 +38,21 @@ export default async function handler(req, res) {
       receipt: `rcpt_${user.id.substring(0, 8)}_${Date.now()}`
     });
 
+    // Persist the order server-side. verify.js reads tier/amount from HERE, never
+    // from the client request — this is what stops "pay for Plus, claim Pro".
+    const { error: dbErr } = await supabase.from('orders').insert({
+      order_id: order.id,
+      user_id: user.id,
+      tier,
+      amount: plan.amount,
+      currency: plan.currency,
+      status: 'created'
+    });
+    if (dbErr) {
+      console.error('Error persisting order:', dbErr.message);
+      return res.status(500).json({ error: 'Internal server error' });
+    }
+
     return res.status(200).json({
       orderId: order.id,
       amount: plan.amount,
@@ -48,6 +63,6 @@ export default async function handler(req, res) {
 
   } catch (err) {
     console.error('Error creating Razorpay order:', err);
-    return res.status(500).json({ error: err.message || 'Internal server error' });
+    return res.status(500).json({ error: 'Internal server error' });
   }
 }

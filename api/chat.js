@@ -14,7 +14,7 @@
 
 export const config = { runtime: 'edge' };
 
-import { authenticate, supabase } from './middleware/auth.js';
+import { authenticate, supabase } from '../lib/auth.js';
 
 const LIMITS = {
   free: { messages: 3 },
@@ -22,6 +22,22 @@ const LIMITS = {
   pro:  { messages: 99999 }
 };
 const GOOGLE_AI_BASE = 'https://generativelanguage.googleapis.com/v1beta/models';
+
+// Only these models may be requested. `model` is interpolated into the upstream
+// URL, so an unvalidated value is a path/query-injection vector — reject anything
+// not on this list. Keep in sync with js/ai-config.js.
+const ALLOWED_MODELS = new Set([
+  'gemini-3.1-flash-lite',
+  'gemma-4-26b-a4b-it',
+  'gemma-4-31b-it',
+]);
+
+function getWeekStart() {
+  const d = new Date();
+  const day = d.getDay();
+  const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+  return new Date(d.setDate(diff)).toISOString().split('T')[0];
+}
 
 /** Pick an available key, rotating by minute so load spreads across projects. */
 function pickKey() {
@@ -56,37 +72,20 @@ export default async function handler(req) {
     return new Response(JSON.stringify({ error: 'Unauthorized. Please log in.' }), { status: 401 });
   }
 
-  // 2. Check tier limits
+  // 2. Resolve tier
   const today = new Date().toISOString().split('T')[0];
-  
-  // Get tier
+  const weekStart = getWeekStart();
+
   const { data: sub } = await supabase
     .from('subscriptions')
     .select('tier')
     .eq('user_id', user.id)
     .single();
-  
+
   const tier = sub?.tier || 'free';
   const limit = LIMITS[tier]?.messages || LIMITS.free.messages;
 
-  // Get usage
-  let { data: usage } = await supabase
-    .from('usage')
-    .select('messages_used')
-    .eq('user_id', user.id)
-    .eq('date', today)
-    .single();
-    
-  const used = usage?.messages_used || 0;
-
-  if (used >= limit) {
-    return new Response(JSON.stringify({ 
-      error: 'LIMIT_REACHED', 
-      message: 'You have reached your daily message limit.',
-      tier 
-    }), { status: 429, headers: { 'Content-Type': 'application/json' } });
-  }
-
+  // 3. Validate the request body BEFORE consuming quota.
   let body;
   try {
     body = await req.json();
@@ -95,10 +94,30 @@ export default async function handler(req) {
   }
 
   const { model, ...rest } = body;
-  if (!model) {
-    return new Response('Missing model field', { status: 400 });
+  if (!model || !ALLOWED_MODELS.has(model)) {
+    // Never interpolate an unvalidated model into the upstream URL.
+    return new Response(JSON.stringify({ error: 'Invalid model' }), {
+      status: 400, headers: { 'Content-Type': 'application/json' }
+    });
   }
 
+  // 4. Atomically consume one message. -1 => daily limit reached (race-safe).
+  const { data: newCount, error: consumeErr } = await supabase.rpc('consume_message', {
+    p_user: user.id, p_date: today, p_week: weekStart, p_limit: limit
+  });
+  if (consumeErr) {
+    console.error('consume_message failed:', consumeErr.message);
+    return new Response(JSON.stringify({ error: 'Server error' }), { status: 500 });
+  }
+  if (newCount === -1) {
+    return new Response(JSON.stringify({
+      error: 'LIMIT_REACHED',
+      message: 'You have reached your daily message limit.',
+      tier
+    }), { status: 429, headers: { 'Content-Type': 'application/json' } });
+  }
+
+  // 5. Proxy to Google AI. `model` is from the allowlist, so the URL is safe.
   const upstream = await fetch(
     `${GOOGLE_AI_BASE}/${model}:streamGenerateContent?alt=sse&key=${key}`,
     {
@@ -108,20 +127,14 @@ export default async function handler(req) {
     }
   );
 
-  // 4. Log usage asynchronously (don't block the stream response)
-  if (upstream.ok) {
+  if (!upstream.ok) {
+    // A failed call shouldn't cost the user — refund the consumed message.
+    (async () => { await supabase.rpc('refund_message', { p_user: user.id, p_date: today }); })();
+  } else {
+    // Log the event asynchronously (don't block the stream).
     (async () => {
-      // Increment messages_used using RPC or simple update if we rely on edge concurrency
-      // For simplicity in edge, just read current and +1 (race condition possible but acceptable for quotas)
-      const { data: cur } = await supabase.from('usage').select('messages_used').eq('user_id', user.id).eq('date', today).single();
-      const newCount = (cur?.messages_used || 0) + 1;
-      await supabase.from('usage').update({ messages_used: newCount }).eq('user_id', user.id).eq('date', today);
-      
-      // Log event
       await supabase.from('events').insert({
-        user_id: user.id,
-        event: 'chat_message',
-        metadata: { model, tier }
+        user_id: user.id, event: 'chat_message', metadata: { model, tier }
       });
     })();
   }
@@ -132,7 +145,6 @@ export default async function handler(req) {
     headers: {
       'Content-Type': 'text/event-stream',
       'Cache-Control': 'no-cache',
-      'Access-Control-Allow-Origin': '*',
     },
   });
 }
