@@ -5,22 +5,39 @@ const GOOGLE_CLIENT_ID = '458133157931-jn2vrkh1hf73pue337o4a1bg70hunl8o.apps.goo
 
 let _gisInitialized = false;
 let _pendingCb = null; // Resolved after ID token is received from Google
+let _rawNonce = null;  // Raw nonce — passed to supabase.auth.signInWithIdToken()
+let _hashedNonce = null; // SHA-256(rawNonce) — passed to google.accounts.id.initialize()
+
+/**
+ * Generates a cryptographic nonce pair.
+ * Google needs the SHA-256 hash; Supabase needs the raw value to verify.
+ */
+async function _ensureNonce() {
+  if (_rawNonce) return; // already generated for this session
+  const arr = crypto.getRandomValues(new Uint8Array(32));
+  _rawNonce = btoa(String.fromCharCode(...arr));
+  const hash = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(_rawNonce));
+  _hashedNonce = Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
 
 /**
  * Initialize GIS once. Sets the credential callback that fires when
  * the user completes the Google sign-in.
+ * Must be called AFTER _ensureNonce() so _hashedNonce is ready.
  */
 function _initGIS() {
   if (_gisInitialized) return;
   _gisInitialized = true;
   google.accounts.id.initialize({
     client_id: GOOGLE_CLIENT_ID,
+    nonce: _hashedNonce, // SHA-256 hash — Google embeds this in the ID token
     callback: async (response) => {
       const cb = _pendingCb;
       _pendingCb = null;
       const { data, error } = await supabase.auth.signInWithIdToken({
         provider: 'google',
         token: response.credential, // Google ID token → Supabase session (no redirect)
+        nonce: _rawNonce,           // Raw nonce — Supabase hashes & compares to token's nonce
       });
       if (error) {
         console.error('GIS sign-in error:', error.message);
@@ -92,7 +109,8 @@ export async function loginWithGoogle() {
     return;
   }
 
-  _initGIS();
+  await _ensureNonce(); // generate nonce pair before GIS init
+  _initGIS();           // safe to call — idempotent, uses _hashedNonce
 
   return new Promise((resolve) => {
     _pendingCb = (err, session) => resolve(session);
