@@ -295,11 +295,11 @@ async function openAccountModal(session) {
       </div>
       <div class="acc-stat">
         <span>Daily AI Messages</span>
-        <span>${data.messagesUsed} / ${data.messagesAllowed > 9000 ? 'Unlimited' : data.messagesAllowed}</span>
+        <span>${data.messagesAllowed > 9000 ? 'Unlimited' : `${data.messagesUsed} / ${data.messagesAllowed}`}</span>
       </div>
       <div class="acc-stat">
         <span>Weekly Quizzes</span>
-        <span>${data.quizzesUsedThisWeek} / ${data.quizzesAllowedThisWeek > 9000 ? 'Unlimited' : data.quizzesAllowedThisWeek}</span>
+        <span>${data.quizzesAllowedThisWeek > 9000 ? 'Unlimited' : `${data.quizzesUsedThisWeek} / ${data.quizzesAllowedThisWeek}`}</span>
       </div>
       ${data.tier !== 'pro' ? `
         <div class="acc-upgrade">
