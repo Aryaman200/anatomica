@@ -1,6 +1,35 @@
 import { initAssistant } from './assistant.js';
-import { getSession, logout, loginWithGoogle } from './auth.js';
+import { getSession, logout, loginWithGoogle, onAuthStateChange } from './auth.js';
 import { checkout } from './payment.js';
+
+/**
+ * Builds the auth slot HTML and wires button events.
+ * Called on initial load and again whenever session changes (popup login).
+ */
+function _renderAuthSlots(header, session) {
+  const authSlot = header.querySelector('#nav-auth-slot');
+  const mobileAuthSlot = header.querySelector('#nav-mobile-auth-slot');
+  if (!authSlot) return;
+
+  const authHTML = session
+    ? `<div class="nav-auth-group">
+         <button class="nav-btn-glass btn-account">
+           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+           <span>Account</span>
+         </button>
+         <button class="nav-btn-glass btn-logout nav-logout-btn">
+           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+         </button>
+       </div>`
+    : `<button class="nav-btn-primary nav-login-btn">Log in</button>`;
+
+  authSlot.innerHTML = authHTML;
+  if (mobileAuthSlot) mobileAuthSlot.innerHTML = authHTML;
+
+  header.querySelectorAll('.nav-login-btn').forEach(b => b.addEventListener('click', loginWithGoogle));
+  header.querySelectorAll('.nav-logout-btn').forEach(b => b.addEventListener('click', logout));
+  header.querySelectorAll('.btn-account').forEach(b => b.addEventListener('click', () => openAccountModal(session)));
+}
 const AI_ICON = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
   <path d="M12 3v3M12 18v3M4.2 7.5l2.6 1.5M17.2 15l2.6 1.5M4.2 16.5l2.6-1.5M17.2 9l2.6-1.5"/>
   <circle cx="12" cy="12" r="3.4"/>
@@ -45,30 +74,13 @@ export function renderChrome(activePage) {
       </div>
     `;
 
-    // Render Auth state asynchronously
-    getSession().then(session => {
-      const authSlot = header.querySelector('#nav-auth-slot');
-      const mobileAuthSlot = header.querySelector('#nav-mobile-auth-slot');
-      
-      const authHTML = session 
-        ? `<div class="nav-auth-group">
-             <button class="nav-btn-glass btn-account">
-               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-               <span>Account</span>
-             </button>
-             <button class="nav-btn-glass btn-logout nav-logout-btn">
-               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
-             </button>
-           </div>`
-        : `<button class="nav-btn-primary nav-login-btn">Log in</button>`;
+    // Show "Log in" button immediately on first paint — no async gap on mobile
+    _renderAuthSlots(header, null);
+    // Then check real session; update only if user is already logged in
+    getSession().then(session => { if (session) _renderAuthSlots(header, session); });
 
-      if (authSlot) authSlot.innerHTML = authHTML;
-      if (mobileAuthSlot) mobileAuthSlot.innerHTML = authHTML;
-
-      header.querySelectorAll('.nav-login-btn').forEach(b => b.addEventListener('click', loginWithGoogle));
-      header.querySelectorAll('.nav-logout-btn').forEach(b => b.addEventListener('click', logout));
-      header.querySelectorAll('.btn-account').forEach(b => b.addEventListener('click', () => openAccountModal(session)));
-    });
+    // Re-render auth slot when GIS popup login completes (no page reload)
+    onAuthStateChange((event, session) => _renderAuthSlots(header, session));
 
     // Burger toggle
     const burger = header.querySelector('#nav-burger');
