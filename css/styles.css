@@ -2470,7 +2470,12 @@ body {
 #auth-gate {
   position: fixed;
   inset: 0;
-  z-index: 100000;
+  /* Must stay BELOW auth.js's Google fallback sign-in modal (z-index 99999) —
+     the gate's own login button opens that modal, and if the gate sits on
+     top, the modal renders but is invisible/unreachable behind it (the
+     button just looks stuck on "Signing in…" forever). Still comfortably
+     above every other overlay in the app (max elsewhere is 10000). */
+  z-index: 99000;
   overflow: hidden;
   display: flex;
   align-items: center;
