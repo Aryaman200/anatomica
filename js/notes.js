@@ -1,5 +1,5 @@
-import { getSession } from './auth.js?v=1784613352897';
-import { t } from './i18n.js?v=1784613352897';
+import { getSession } from './auth.js?v=1784613961254';
+import { t } from './i18n.js?v=1784613961254';
 
 let container = null;
 let currentSession = null;

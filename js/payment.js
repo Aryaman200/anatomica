@@ -1,4 +1,4 @@
-import { getSession, loginWithGoogle } from './auth.js?v=1784613352897';
+import { getSession, loginWithGoogle } from './auth.js?v=1784613961254';
 
 /**
  * Shows a beautiful custom modal (replacement for confirm)

@@ -3,10 +3,10 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 import { MeshoptDecoder } from 'https://cdn.jsdelivr.net/npm/three@0.165.0/examples/jsm/libs/meshopt_decoder.module.js';
 
-import { scene, requestRender } from './scene.js?v=1784613352897';
-import { SYSTEMS } from './config.js?v=1784613352897';
-import { cleanLabel, colourForStructure, ANATOMY_STRUCTURES, labelFingerprint } from './data/anatomy.js?v=1784613352897';
-import { GROUPS } from './data/groups.js?v=1784613352897';
+import { scene, requestRender } from './scene.js?v=1784613961254';
+import { SYSTEMS } from './config.js?v=1784613961254';
+import { cleanLabel, colourForStructure, ANATOMY_STRUCTURES, labelFingerprint } from './data/anatomy.js?v=1784613961254';
+import { GROUPS } from './data/groups.js?v=1784613961254';
 
 // Fingerprint → pretty taxonomy label. Recovers the space-separated names
 // after THREE's GLTFLoader has sanitized GLB node names to underscore blobs.

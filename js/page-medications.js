@@ -1,8 +1,8 @@
-import { renderChrome } from './chrome.js?v=1784613352897';
-import { initTheme } from './theme.js?v=1784613352897';
-import { MEDICATIONS, MED_GROUPS } from './data/medications.js?v=1784613352897';
+import { renderChrome } from './chrome.js?v=1784613961254';
+import { initTheme } from './theme.js?v=1784613961254';
+import { MEDICATIONS, MED_GROUPS } from './data/medications.js?v=1784613961254';
 
-import { initI18n } from './i18n.js?v=1784613352897';
+import { initI18n } from './i18n.js?v=1784613961254';
 
 async function init() {
   await initI18n();

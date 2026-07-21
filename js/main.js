@@ -2,16 +2,16 @@ import {
   buildSidebar, initSearchUI, initClippingUI, initDetailPanel,
   applyHighlight, openPartPanel, openConditionPanel, openMedicationPanel,
   hideAll, toggleSystem, initSidebarToggle,
-} from './ui.js?v=1784613352897';
-import { loadAll, getSearchIndex } from './loader.js?v=1784613352897';
-import { requestRender, setCameraState } from './scene.js?v=1784613352897';
-import { initInspect } from './inspect.js?v=1784613352897';
-import { initStyleUI } from './style.js?v=1784613352897';
-import { initTheme } from './theme.js?v=1784613352897';
-import { CONDITIONS } from './data/conditions.js?v=1784613352897';
-import { MEDICATIONS } from './data/medications.js?v=1784613352897';
-import { ANATOMY_TERMS } from './config.js?v=1784613352897';
-import { initLangUI } from './langUI.js?v=1784613352897';
+} from './ui.js?v=1784613961254';
+import { loadAll, getSearchIndex } from './loader.js?v=1784613961254';
+import { requestRender, setCameraState } from './scene.js?v=1784613961254';
+import { initInspect } from './inspect.js?v=1784613961254';
+import { initStyleUI } from './style.js?v=1784613961254';
+import { initTheme } from './theme.js?v=1784613961254';
+import { CONDITIONS } from './data/conditions.js?v=1784613961254';
+import { MEDICATIONS } from './data/medications.js?v=1784613961254';
+import { ANATOMY_TERMS } from './config.js?v=1784613961254';
+import { initLangUI } from './langUI.js?v=1784613961254';
 
 function applyDeepLink() {
   const params = new URLSearchParams(location.search);
@@ -50,7 +50,7 @@ function applyDeepLink() {
   }
 }
 
-import { initI18n } from './i18n.js?v=1784613352897';
+import { initI18n } from './i18n.js?v=1784613961254';
 
 async function init() {
   await initI18n();
@@ -67,7 +67,7 @@ async function init() {
   initSidebarToggle();
   initLangUI();
 
-  import('./notes.js?v=1784613352897').then(m => {
+  import('./notes.js?v=1784613961254').then(m => {
     m.initNotesWidget();
     
     const fabAdd = document.getElementById('notes-fab-add');

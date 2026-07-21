@@ -1,4 +1,4 @@
-import { supabase } from './supabase-client.js?v=1784613352897';
+import { supabase } from './supabase-client.js?v=1784613961254';
 
 // Google Client ID — safe to expose in browser (public identifier, like Supabase anon key)
 const GOOGLE_CLIENT_ID = '458133157931-jn2vrkh1hf73pue337o4a1bg70hunl8o.apps.googleusercontent.com';

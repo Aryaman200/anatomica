@@ -1,4 +1,4 @@
-import { scene, requestRender } from './scene.js?v=1784613352897';
+import { scene, requestRender } from './scene.js?v=1784613961254';
 
 // Default is SOLID ('full'). Opaque, depth-written geometry means the depth
 // buffer resolves what's in front — which is what stops parts flickering in and

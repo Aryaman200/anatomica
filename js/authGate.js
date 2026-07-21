@@ -16,7 +16,7 @@
  * a returning signed-in user's getSession() below resolves from local storage
  * — no network round-trip, no re-login, no showcase replay.
  */
-import { getSession, loginWithGoogle, onAuthStateChange } from './auth.js?v=1784613352897';
+import { getSession, loginWithGoogle, onAuthStateChange } from './auth.js?v=1784613961254';
 
 const SHOWCASE_SLIDES = [
   { file: 'home.png', caption: 'Six body systems, rendered simultaneously in real-time 3D' },
@@ -55,15 +55,20 @@ function startShowcase(gate) {
   return timer;
 }
 
-/** inert (or its focus-trap fallback) on every direct body child except the gate. */
+/** inert on every direct body child except the gate. */
 function setBackgroundInert(on) {
-  const supportsInert = 'inert' in HTMLElement.prototype;
+  // NOT aria-hidden: several existing overlays (e.g. #export-modal) already
+  // use aria-hidden="true/false" as their OWN show/hide switch. Setting it
+  // here as a blanket "hide from a11y tree" forced #export-modal open right
+  // after login (aria-hidden="false" reads as "show" per its CSS), with no
+  // click handlers wired since it was never opened through the real
+  // exportNotes() flow. `inert` alone already removes an element from the
+  // accessibility tree and blocks focus/pointer — no separate flag needed,
+  // and every browser this site targets (WebGL2-capable) supports it.
+  if (!('inert' in HTMLElement.prototype)) return;
   for (const el of document.body.children) {
     if (el.id === 'auth-gate') continue;
-    if (supportsInert) {
-      if (on) el.setAttribute('inert', ''); else el.removeAttribute('inert');
-    }
-    el.setAttribute('aria-hidden', on ? 'true' : 'false');
+    if (on) el.setAttribute('inert', ''); else el.removeAttribute('inert');
   }
 }
 

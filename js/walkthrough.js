@@ -1,9 +1,9 @@
 import * as THREE from 'three';
-import { camera, controls, requestRender } from './scene.js?v=1784613352897';
-import { getSearchIndex } from './loader.js?v=1784613352897';
-import { applyHighlight, setSidebarHidden, isSidebarHidden } from './ui.js?v=1784613352897';
-import { SEVERITY_LABEL, SEVERITY_COLOR, cleanDesc } from './data/conditions.js?v=1784613352897';
-import { isModelled } from './data/groups.js?v=1784613352897';
+import { camera, controls, requestRender } from './scene.js?v=1784613961254';
+import { getSearchIndex } from './loader.js?v=1784613961254';
+import { applyHighlight, setSidebarHidden, isSidebarHidden } from './ui.js?v=1784613961254';
+import { SEVERITY_LABEL, SEVERITY_COLOR, cleanDesc } from './data/conditions.js?v=1784613961254';
+import { isModelled } from './data/groups.js?v=1784613961254';
 
 /* ── PULSE ANIMATION ── */
 let pulseRafId = null;

@@ -1,7 +1,7 @@
-import { initAssistant } from './assistant.js?v=1784613352897';
-import { getSession, logout, loginWithGoogle, onAuthStateChange } from './auth.js?v=1784613352897';
-import { checkout } from './payment.js?v=1784613352897';
-import { t } from './i18n.js?v=1784613352897';
+import { initAssistant } from './assistant.js?v=1784613961254';
+import { getSession, logout, loginWithGoogle, onAuthStateChange } from './auth.js?v=1784613961254';
+import { checkout } from './payment.js?v=1784613961254';
+import { t } from './i18n.js?v=1784613961254';
 
 // Escape any server-provided string before it goes into innerHTML.
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) =>
