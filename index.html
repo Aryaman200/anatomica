@@ -14,6 +14,7 @@
   <meta name="author" content="Anatomy101" />
   <meta name="robots" content="index, follow" />
   <link rel="canonical" href="https://www.anatomy101.in/" />
+  <link rel="manifest" href="/manifest.json" />
 
   <!-- Open Graph (Facebook / LinkedIn / WhatsApp) -->
   <meta property="og:type" content="website" />
@@ -59,16 +60,37 @@
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
-  <link rel="stylesheet" href="css/pages.css" />
-  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="stylesheet" href="css/pages.css?v=1784611432079" />
+  <link rel="stylesheet" href="css/styles.css?v=1784611432079" />
   
   <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 
 <body>
+
+  <!-- ── AUTH GATE — fullscreen showcase + login-first wall ─────────── -->
+  <div id="auth-gate" role="dialog" aria-modal="true" aria-label="Sign in to Anatomy101">
+    <div class="gate-showcase"></div>
+    <div class="gate-scrim"></div>
+    <div class="gate-content">
+      <img class="gate-logo" src="assets/icon.png" alt="" aria-hidden="true">
+      <h1 class="gate-title">Anatomy101</h1>
+      <p class="gate-tagline">A high-fidelity, interactive 3D human body atlas</p>
+      <p class="gate-caption" id="gate-caption"></p>
+      <button class="gate-login-btn" type="button">
+        <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path fill="#fff" d="M12.24 10.285V14.4h6.806c-.275 1.765-2.056 5.174-6.806 5.174-4.095 0-7.439-3.389-7.439-7.574s3.344-7.574 7.439-7.574c2.33 0 3.891.989 4.785 1.849l3.254-3.138C18.189 1.186 15.479 0 12.24 0c-6.635 0-12 5.365-12 12s5.365 12 12 12c6.926 0 11.52-4.869 11.52-11.726 0-.788-.085-1.39-.189-1.989H12.24z"/></svg>
+        Continue with Google
+      </button>
+      <p class="gate-sub">Free to use. Sign in to start exploring — takes 5 seconds.</p>
+    </div>
+  </div>
+  <script type="module">
+    import { initAuthGate } from './js/authGate.js?v=1784611432079';
+    initAuthGate();
+  </script>
 
   <!-- ── 3D CANVAS ─────────────────────────────────── -->
   <div id="canvas-wrap">
@@ -78,8 +100,27 @@
   <!-- ── UNIFIED NAVBAR ────────────────────────────── -->
   <header id="site-header" role="banner"></header>
 
-  <!-- ── HEADER ACTIONS (theme + render style) ──────── -->
+  <!-- ── HEADER ACTIONS (theme + render style + language) ──────── -->
   <div id="header-actions" role="toolbar" aria-label="Display options">
+    <div class="hdr-menu-wrap">
+      <button id="lang-toggle" class="hdr-btn" aria-label="Select Language" aria-expanded="false">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="2" y1="12" x2="22" y2="12"></line>
+          <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+        </svg>
+      </button>
+      <div id="lang-menu" role="menu" aria-label="Language options" class="dropdown-menu">
+        <button class="lang-opt" data-lang="en" role="menuitemradio" aria-checked="false">
+          <span class="style-opt-name">English</span>
+          <span class="style-opt-desc">Default Language</span>
+        </button>
+        <button class="lang-opt" data-lang="hi" role="menuitemradio" aria-checked="false">
+          <span class="style-opt-name">हिन्दी (Hindi)</span>
+          <span class="style-opt-desc">Hindi</span>
+        </button>
+      </div>
+    </div>
     <div class="hdr-menu-wrap">
       <button id="style-toggle" class="hdr-btn" aria-label="Rendering style" aria-expanded="false">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
@@ -112,7 +153,7 @@
         <circle cx="11" cy="11" r="7" />
         <path d="M21 21l-4.35-4.35" />
       </svg>
-      <input id="search-input" type="text" placeholder="Search organs, conditions, symptoms…" autocomplete="off"
+      <input id="search-input" type="text" data-i18n-placeholder="search_placeholder" placeholder="Search organs, conditions, symptoms…" autocomplete="off"
         spellcheck="false" aria-autocomplete="list" aria-controls="search-suggestions" />
       <button id="search-x" aria-label="Clear search">×</button>
     </div>
@@ -130,15 +171,31 @@
       <div class="ld-ring"></div>
       <div class="ld-core"></div>
     </div>
-    <span class="ld-label">Loading Anatomy101</span>
+    <span class="ld-label" data-i18n="loading_title">Loading Anatomy101</span>
     <div class="ld-bar-track" aria-hidden="true">
       <div class="ld-bar" id="ld-bar"></div>
     </div>
     <span class="ld-detail" id="ld-detail">Initialising…</span>
   </div>
 
+  <!-- ── FLOATING NOTES CONTAINER ─────────────────────── -->
+  <div id="notes-container" aria-live="polite"></div>
+
+  <!-- ── FLOATING ACTION BUTTON ──────────────────────── -->
+  <div id="notes-fab-container">
+    <button class="notes-fab-main" aria-label="Notes Menu">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M12 5v14M5 12h14"/>
+      </svg>
+    </button>
+    <div class="notes-fab-menu">
+      <button id="notes-fab-add" class="notes-fab-item" data-i18n="fab_new_note">New Note</button>
+      <button id="notes-fab-export" class="notes-fab-item" data-i18n="fab_export_all">Export All</button>
+    </div>
+  </div>
+
   <!-- ── HINT PILL ──────────────────────────────────── -->
-  <div id="hint" aria-hidden="true">
+  <div id="hint" aria-hidden="true" data-i18n="hint_text">
     Drag to rotate &nbsp;·&nbsp; Scroll to zoom &nbsp;·&nbsp; Right-drag to pan
   </div>
 
@@ -168,10 +225,11 @@
 
     <div class="sb-scroll">
       <!-- Systems -->
-      <div class="sec-label" style="margin-top:4px;" id="systems-section-label">Systems</div>
+      <div class="sec-label" style="margin-top:4px;" id="systems-section-label" data-i18n="systems_title">Systems</div>
       <div class="preset-row" role="group" aria-label="Show or hide all systems">
-        <button class="preset-btn" id="btn-all" aria-label="Show all systems">All</button>
-        <button class="preset-btn" id="btn-none" aria-label="Hide all systems">None</button>
+        <button class="preset-btn" id="btn-all" aria-label="Show all systems" data-i18n="btn_all">All</button>
+        <button class="preset-btn" id="btn-none" aria-label="Hide all systems" data-i18n="btn_none">None</button>
+        <button class="preset-btn" id="btn-share" aria-label="Share current view" data-i18n="btn_share">Share</button>
       </div>
       <div class="sys-list" id="sys-list" role="list"></div>
 
@@ -180,21 +238,21 @@
       <!-- Cross-section -->
       <div class="cut-wrap">
         <div class="cut-head">
-          <span class="cut-title">Cross-Section</span>
-          <button class="cut-clear" id="cut-clear" style="display:none;" aria-label="Clear cross-section">Clear</button>
+          <span class="cut-title" data-i18n="cross_section_title">Cross-Section</span>
+          <button class="cut-clear" id="cut-clear" style="display:none;" aria-label="Clear cross-section" data-i18n="cross_section_clear">Clear</button>
         </div>
-        <p class="cut-sub">Slice the body along any axis to see inside.</p>
+        <p class="cut-sub" data-i18n="cross_section_sub">Slice the body along any axis to see inside.</p>
 
         <div class="cut-tabs" role="group" aria-label="Cross-section axis">
-          <button class="cut-tab" id="cut-front" data-axis="z" aria-pressed="false">Front</button>
-          <button class="cut-tab" id="cut-side" data-axis="x" aria-pressed="false">Side</button>
-          <button class="cut-tab" id="cut-across" data-axis="y" aria-pressed="false">Across</button>
+          <button class="cut-tab" id="cut-front" data-axis="z" aria-pressed="false" data-i18n="cut_front">Front</button>
+          <button class="cut-tab" id="cut-side" data-axis="x" aria-pressed="false" data-i18n="cut_side">Side</button>
+          <button class="cut-tab" id="cut-across" data-axis="y" aria-pressed="false" data-i18n="cut_across">Across</button>
         </div>
 
         <div class="cut-controls" id="cut-controls">
           <div>
             <div class="slider-label">
-              <span>Depth</span>
+              <span data-i18n="depth_label">Depth</span>
               <span id="depth-pct-label">50%</span>
             </div>
             <input type="range" class="depth-slider" id="depth-slider" min="0" max="100" value="50" step="1"
@@ -204,7 +262,7 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
               <path d="M7 16V4m0 0L3 8m4-4l4 4M17 8v12m0 0l4-4m-4 4l-4-4" />
             </svg>
-            Flip side
+            <span data-i18n="flip_side">Flip side</span>
           </button>
         </div>
       </div>
@@ -222,11 +280,49 @@
   </script>
   <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 
-  <script type="module" src="js/main.js?v=1784447089342"></script>
+  <!-- ── EXPORT MODAL ─────────────────────────────────── -->
+  <div id="export-modal" aria-hidden="true" class="glass-overlay">
+    <div class="export-modal-content glass-panel">
+      <div class="em-header">
+        <h2 data-i18n="export_modal_title">My Anatomy101 Notes</h2>
+        <button id="em-close" aria-label="Close modal">×</button>
+      </div>
+      <div class="em-actions no-print">
+        <button class="em-btn em-print" id="em-print-btn" data-i18n="export_btn_print">Print / Save PDF</button>
+        <a class="em-btn em-wa" id="em-wa-btn" target="_blank" data-i18n="export_btn_wa">Share WhatsApp</a>
+        <a class="em-btn em-mail" id="em-mail-btn" target="_blank" data-i18n="export_btn_mail">Share Email</a>
+      </div>
+      <div id="em-body" class="em-body">
+        <!-- Notes injected here -->
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Touch devices can't right-drag or scroll-wheel; show the gesture hint instead.
+    // Runs before the deferred main.js module, so i18n picks up the swapped key.
+    if (window.matchMedia && window.matchMedia('(pointer: coarse)').matches) {
+      var _hint = document.getElementById('hint');
+      if (_hint) _hint.setAttribute('data-i18n', 'hint_text_touch');
+    }
+  </script>
+
+  <script type="module" src="js/main.js?v=1784611432079"></script>
   
   <script type="module">
-    import { renderChrome } from './js/chrome.js';
-    renderChrome('explore');
+    import { renderChrome } from './js/chrome.js?v=1784611432079';
+    
+    if (window._i18nReady) {
+      renderChrome('explore');
+    } else {
+      window.addEventListener('anatomy101-i18n-ready', () => renderChrome('explore'), { once: true });
+    }
+
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js');
+      });
+    }
   </script>
 </body>
 

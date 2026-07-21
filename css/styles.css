@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
 :root {
   --bg: #080b10;
@@ -25,8 +25,8 @@
   --accent-teal: #2dd4bf;
 
   /* Typography scale */
-  --font-brand: 'Outfit', system-ui, sans-serif;
-  --font-body: 'Plus Jakarta Sans', system-ui, sans-serif;
+  --font-brand: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Inter', 'Helvetica Neue', sans-serif;
+  --font-body: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Inter', 'Helvetica Neue', sans-serif;
   --text-xs: 11px;
   --lh-xs: 1.45;
   --text-sm: 12.5px;
@@ -161,7 +161,7 @@ body {
 ───────────────────────────────────────────── */
 #header-actions {
   position: fixed;
-  top: 88px;
+  top: 16px;
   left: 16px;
   z-index: 25;
   display: flex;
@@ -206,7 +206,7 @@ body {
   position: relative;
 }
 
-#style-menu {
+#style-menu, #lang-menu {
   position: absolute;
   top: 50px;
   left: 0;
@@ -229,13 +229,13 @@ body {
   z-index: 50;
 }
 
-#style-menu.open {
+#style-menu.open, #lang-menu.open {
   max-height: 240px;
   opacity: 1;
   pointer-events: all;
 }
 
-.style-opt {
+.style-opt, .lang-opt {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -249,22 +249,20 @@ body {
   transition: background var(--dur-fast);
 }
 
-.style-opt:hover {
+.style-opt:hover, .lang-opt:hover {
   background: rgba(255, 255, 255, 0.06);
 }
 
-.style-opt.active {
+.style-opt.active, .lang-opt.active {
   background: var(--brand-dim);
 }
 
-.style-opt-name {
+.style-opt-name, .lang-opt {
   font-size: var(--text-sm);
   font-weight: var(--fw-semi);
-  color: var(--text-primary);
-  letter-spacing: 0.003em;
 }
 
-.style-opt.active .style-opt-name {
+.style-opt.active .style-opt-name, .lang-opt.active {
   color: #ff8a8a;
 }
 
@@ -1940,3 +1938,668 @@ body {
     max-height: 55vh;
   }
 }
+
+/* ── FLOATING NOTES CONTAINER ── */
+#notes-container {
+  position: fixed;
+  top: 0; left: 0; width: 100%; height: 100%;
+  pointer-events: none;
+  z-index: 1000;
+}
+
+/* ── FLOATING NOTES WIDGET (Liquid Glass) ── */
+.note-widget {
+  position: absolute;
+  width: 320px;
+  max-width: calc(100vw - 48px);
+  background: rgba(18, 22, 33, 0.4);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  box-shadow: 
+    0 24px 48px -12px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  display: flex;
+  flex-direction: column;
+  pointer-events: auto;
+  transition: opacity 0.3s ease;
+}
+
+.note-widget[aria-hidden="true"] {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.nw-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  cursor: grab;
+  user-select: none;
+}
+.nw-header:active {
+  cursor: grabbing;
+}
+
+
+.nw-title {
+  margin: 0;
+  font-size: var(--text-md);
+  font-weight: var(--fw-semi);
+  color: var(--text-primary);
+  letter-spacing: var(--tracking-tight);
+}
+
+.nw-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.nw-actions button {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.nw-actions button:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-primary);
+}
+
+.nw-close {
+  font-size: 20px;
+  line-height: 1;
+}
+
+.nw-body {
+  padding: 12px 20px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.nw-textarea {
+  width: 100%;
+  height: 160px;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  padding: 12px;
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  line-height: var(--lh-base);
+  resize: none;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.nw-textarea:focus {
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.nw-textarea::placeholder {
+  color: var(--text-tertiary);
+}
+
+.nw-status {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  text-align: right;
+  min-height: 14px;
+}
+
+/* Detail Panel Note Button Update */
+.btn-add-note {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 12px;
+  margin-top: 24px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  color: var(--text-primary);
+  font-family: var(--font-brand);
+  font-size: var(--text-sm);
+  font-weight: var(--fw-medium);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-add-note:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+/* -- FLOATING ACTION BUTTON -- */
+#notes-fab-container {
+  position: fixed;
+  bottom: 24px;
+  left: 24px;
+  z-index: 1001;
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.notes-fab-main {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: rgba(18, 22, 33, 0.6);
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.notes-fab-main svg {
+  width: 20px;
+  height: 20px;
+  transition: transform 0.3s ease;
+}
+
+.notes-fab-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(10px);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+#notes-fab-container:hover .notes-fab-menu,
+#notes-fab-container:focus-within .notes-fab-menu {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+
+#notes-fab-container:hover .notes-fab-main svg {
+  transform: rotate(45deg);
+}
+
+.notes-fab-item {
+  background: rgba(18, 22, 33, 0.6);
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: var(--text-primary);
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-family: var(--font-brand);
+  font-size: var(--text-sm);
+  font-weight: var(--fw-medium);
+  cursor: pointer;
+  white-space: nowrap;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  transition: all 0.2s;
+}
+
+.notes-fab-item:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+@media (max-width: 768px) {
+  #notes-fab-container,
+  #notes-container,
+  .btn-add-note {
+    display: none !important;
+  }
+}
+
+
+
+/* -- EXPORT MODAL -- */
+#export-modal {
+  position: fixed;
+  top: 0; left: 0; width: 100vw; height: 100vh;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.3s ease;
+}
+
+#export-modal[aria-hidden="true"] {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.export-modal-content {
+  width: 90%;
+  max-width: 600px;
+  max-height: 90vh;
+  background: rgba(18, 22, 33, 0.85);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 24px;
+  box-shadow: 0 32px 64px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.em-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24px 32px 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.em-header h2 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: #fff;
+  letter-spacing: -0.02em;
+}
+
+#em-close {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 28px;
+  line-height: 1;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+#em-close:hover {
+  color: #fff;
+}
+
+.em-actions {
+  display: flex;
+  gap: 12px;
+  padding: 20px 32px;
+  background: rgba(255, 255, 255, 0.02);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.em-btn {
+  padding: 10px 20px;
+  border-radius: 12px;
+  border: none;
+  font-family: var(--font-brand);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.2s;
+}
+
+.em-btn:hover {
+  opacity: 0.9;
+}
+
+.em-print { background: #fff; color: #111; }
+.em-wa { background: #25D366; color: #fff; }
+.em-mail { background: #007AFF; color: #fff; }
+
+.em-body {
+  padding: 32px;
+  overflow-y: auto;
+  color: var(--text-primary);
+}
+
+.em-section-title {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0 0 16px;
+  color: #fff;
+}
+
+.em-note-block {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.em-note-title {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-tertiary);
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+
+.em-note-content {
+  font-size: 15px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  #export-modal, #export-modal * {
+    visibility: visible;
+  }
+  #export-modal {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background: #fff;
+    backdrop-filter: none;
+  }
+  .export-modal-content {
+    box-shadow: none;
+    border: none;
+    background: #fff;
+    color: #000;
+    width: 100%;
+    max-width: none;
+  }
+  .em-header h2, .em-section-title, .em-note-content, .em-note-title {
+    color: #000;
+  }
+  .em-note-block {
+    background: #fff;
+    border: 1px solid #ccc;
+    break-inside: avoid;
+  }
+  .no-print {
+    display: none !important;
+  }
+}
+
+
+
+/* -- NOTES MANAGER MODAL CSS UPDATES -- */
+.em-note-block {
+  position: relative;
+  transition: background 0.2s, border-color 0.2s;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+}
+
+.em-note-block:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.em-note-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 8px;
+}
+
+.em-note-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+}
+
+.em-note-checkbox input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.em-note-checkbox input[type="checkbox"]:checked {
+  background: var(--primary, #007AFF);
+  border-color: var(--primary, #007AFF);
+}
+
+.em-note-checkbox input[type="checkbox"]:checked::after {
+  content: '';
+  width: 10px;
+  height: 10px;
+  background: currentColor;
+  clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%);
+  background-color: white;
+}
+
+.em-note-title {
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-secondary);
+  font-weight: 600;
+  margin: 0;
+}
+
+.em-note-content {
+  font-size: 15px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  color: var(--text-primary);
+  margin-left: 30px;
+}
+
+.em-btn-edit,
+.em-btn-delete {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.em-btn-edit:hover,
+.em-btn-delete:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-primary);
+}
+
+.em-btn-delete:hover {
+  color: #ff453a;
+  background: rgba(255, 69, 58, 0.1);
+}
+
+/* Glassmorphic Share Buttons */
+.em-wa { 
+  background: rgba(37, 211, 102, 0.15) !important;
+  border: 1px solid rgba(37, 211, 102, 0.3) !important;
+  color: #25D366 !important;
+}
+.em-wa:hover {
+  background: rgba(37, 211, 102, 0.25) !important;
+}
+
+.em-mail { 
+  background: rgba(0, 122, 255, 0.15) !important;
+  border: 1px solid rgba(0, 122, 255, 0.3) !important;
+  color: #007AFF !important;
+}
+.em-mail:hover {
+  background: rgba(0, 122, 255, 0.25) !important;
+}
+
+
+.nw-delete:hover {
+  color: #ff453a !important;
+}
+
+/* ── AUTH GATE — fullscreen showcase + login-first wall ─────────────────── */
+/* Ships visible by default in the HTML (fail-closed); js/authGate.js removes
+   it once a session is confirmed. See authGate.js for the full rationale. */
+#auth-gate {
+  position: fixed;
+  inset: 0;
+  z-index: 100000;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg);
+  transition: opacity var(--dur-mid, 0.3s) var(--ease, ease), visibility var(--dur-mid, 0.3s) var(--ease, ease);
+}
+#auth-gate.gate-hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.gate-showcase {
+  position: absolute;
+  inset: 0;
+}
+
+.gate-slide {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  opacity: 0;
+  transform: scale(1.0);
+  transition: opacity 1.4s ease;
+  animation: gate-kenburns 9s ease-in-out infinite alternate;
+  will-change: transform, opacity;
+}
+.gate-slide.active { opacity: 1; z-index: 1; }
+
+@keyframes gate-kenburns {
+  from { transform: scale(1.0) translate(0, 0); }
+  to   { transform: scale(1.12) translate(-1.5%, -1.5%); }
+}
+
+.gate-scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  /* Deliberately dark throughout (not just a bottom-heavy vignette): the
+     showcase slides sit behind real, still-live app markup (search bar,
+     sidebar state, etc). A lighter top edge let live UI text read through
+     legibly, which defeats the gate. Flatter/darker keeps the screenshots
+     as atmosphere, not a readable second UI. */
+  background: linear-gradient(180deg,
+    rgba(8, 11, 16, 0.82) 0%,
+    rgba(8, 11, 16, 0.88) 55%,
+    rgba(8, 11, 16, 0.96) 100%);
+  backdrop-filter: blur(3px);
+}
+
+.gate-content {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: var(--sp-1, 4px);
+  padding: var(--sp-5, 32px);
+  max-width: 440px;
+  width: 90%;
+}
+
+.gate-logo {
+  width: 56px;
+  height: 56px;
+  border-radius: var(--radius-sm, 8px);
+  margin-bottom: var(--sp-2, 8px);
+}
+
+.gate-title {
+  font-family: var(--font-brand);
+  font-size: var(--text-2xl, 24px);
+  font-weight: var(--fw-bold, 700);
+  color: var(--text-primary);
+  margin: 0;
+  letter-spacing: var(--tracking-tight, -0.025em);
+}
+
+.gate-tagline {
+  font-family: var(--font-body);
+  color: var(--text-secondary);
+  margin: 0;
+  font-size: var(--text-md, 14.5px);
+}
+
+.gate-caption {
+  min-height: 22px;
+  color: var(--accent-blue);
+  font-family: var(--font-body);
+  font-size: var(--text-sm, 12.5px);
+  font-weight: var(--fw-medium, 500);
+  margin: var(--sp-3, 16px) 0 var(--sp-1, 4px);
+  transition: opacity 0.3s ease;
+}
+
+.gate-login-btn {
+  margin-top: var(--sp-2, 8px);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 13px 30px;
+  border-radius: 999px;
+  border: none;
+  background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+  color: #fff;
+  font-family: var(--font-body);
+  font-size: var(--text-lg, 16px);
+  font-weight: var(--fw-semi, 600);
+  cursor: pointer;
+  transition: transform var(--dur-fast, 0.15s) var(--ease-spring, ease),
+              box-shadow var(--dur-fast, 0.15s) var(--ease, ease);
+  box-shadow: 0 8px 24px rgba(91, 140, 255, 0.35);
+}
+.gate-login-btn:hover { transform: translateY(-2px); box-shadow: 0 12px 32px rgba(91, 140, 255, 0.45); }
+.gate-login-btn:disabled { opacity: 0.7; cursor: default; transform: none; }
+
+.gate-sub {
+  color: var(--text-tertiary);
+  font-family: var(--font-body);
+  font-size: var(--text-xs, 11px);
+  margin: var(--sp-2, 8px) 0 0;
+}
+
+@media (max-width: 480px) {
+  .gate-title { font-size: var(--text-xl, 20px); }
+  .gate-content { padding: var(--sp-4, 24px); }
+}
+

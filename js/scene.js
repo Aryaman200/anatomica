@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { bounds } from './loader.js?v=1784447089342';
+import { bounds } from './loader.js?v=1784611432079';
 
 export const canvasWrap = document.getElementById('canvas-wrap');
 export const canvas     = document.getElementById('three-canvas');
@@ -25,7 +25,10 @@ renderer.outputColorSpace = THREE.SRGBColorSpace;
 export const scene = new THREE.Scene();
 scene.fog = new THREE.FogExp2(0x090c11, 0.01);
 
-export const camera = new THREE.PerspectiveCamera(42, canvasWrap.clientWidth / canvasWrap.clientHeight, 0.01, 100);
+const initialAspect = (canvasWrap.clientWidth && canvasWrap.clientHeight) 
+  ? (canvasWrap.clientWidth / canvasWrap.clientHeight) 
+  : 1; // Fallback aspect to avoid NaN
+export const camera = new THREE.PerspectiveCamera(42, initialAspect, 0.01, 100);
 camera.position.set(0, 1.0, 4.0);
 
 // ── CONTROLS ──
@@ -39,6 +42,85 @@ controls.panSpeed       = 0.8;
 controls.screenSpacePanning = true;
 controls.zoomToCursor   = false;
 controls.target.set(0, 0.9, 0);
+
+// Touch gesture scheme:
+//   1 finger drag          → rotate (OrbitControls default)
+//   pinch (2 fingers)      → zoom only (no incidental pan)
+//   double-tap then drag   → pan (handled manually below)
+controls.touches = { ONE: THREE.TOUCH.ROTATE, TWO: THREE.TOUCH.DOLLY };
+
+// ── DOUBLE-TAP-DRAG PAN (touch) ──
+// OrbitControls has no built-in "double-tap-drag = pan" gesture, so we detect it
+// ourselves and translate camera + target across the screen-space plane. While a
+// pan is active we disable OrbitControls so its single-finger rotate can't fight us.
+{
+  const el = renderer.domElement;
+  const DOUBLE_TAP_MS = 300; // max gap between first tap release and second tap
+  const TAP_MOVE_TOL  = 14;  // px — a "tap" must not travel further than this
+
+  const _panL = new THREE.Vector3();
+  const _panU = new THREE.Vector3();
+  const _panV = new THREE.Vector3();
+
+  let lastTapEnd = 0;
+  let tapStartX = 0, tapStartY = 0, tapStartTime = 0;
+  let panActive = false;
+  let panPrevX = 0, panPrevY = 0;
+
+  function panByPixels(deltaX, deltaY) {
+    // Distance from camera to target, converted to world units per screen pixel.
+    const dist = _panV.copy(camera.position).sub(controls.target).length();
+    const worldPerPx = (2 * dist * Math.tan((camera.fov / 2) * Math.PI / 180)) / el.clientHeight;
+    _panL.setFromMatrixColumn(camera.matrix, 0).multiplyScalar(-deltaX * worldPerPx * controls.panSpeed);
+    _panU.setFromMatrixColumn(camera.matrix, 1).multiplyScalar( deltaY * worldPerPx * controls.panSpeed);
+    _panL.add(_panU);
+    camera.position.add(_panL);
+    controls.target.add(_panL);
+    controls.update(); // fires 'change' → requestRender
+  }
+
+  el.addEventListener('touchstart', (e) => {
+    if (e.touches.length !== 1) { panActive = false; return; }
+    const t = e.touches[0];
+    const now = performance.now();
+    if (now - lastTapEnd < DOUBLE_TAP_MS) {
+      // Second tap landed quickly after the first → arm pan for the drag.
+      panActive = true;
+      controls.enabled = false; // stop OrbitControls rotating this same finger
+      panPrevX = t.clientX;
+      panPrevY = t.clientY;
+      e.preventDefault();
+    }
+    tapStartX = t.clientX; tapStartY = t.clientY; tapStartTime = now;
+  }, { passive: false });
+
+  el.addEventListener('touchmove', (e) => {
+    if (!panActive || e.touches.length !== 1) return;
+    const t = e.touches[0];
+    panByPixels(t.clientX - panPrevX, t.clientY - panPrevY);
+    panPrevX = t.clientX; panPrevY = t.clientY;
+    e.preventDefault();
+  }, { passive: false });
+
+  function endTouch(e) {
+    const now = performance.now();
+    if (panActive) {
+      panActive = false;
+      controls.enabled = true;
+      lastTapEnd = 0; // consume the double-tap
+      return;
+    }
+    // Record a clean, quick tap so the NEXT touchstart can pair with it.
+    const ct = e.changedTouches[0];
+    const moved = ct
+      ? Math.abs(ct.clientX - tapStartX) > TAP_MOVE_TOL || Math.abs(ct.clientY - tapStartY) > TAP_MOVE_TOL
+      : true;
+    lastTapEnd = (!moved && now - tapStartTime < DOUBLE_TAP_MS) ? now : 0;
+  }
+
+  el.addEventListener('touchend', endTouch);
+  el.addEventListener('touchcancel', () => { panActive = false; controls.enabled = true; });
+}
 
 // ── OPTIMIZATION: Render-on-demand ──
 let renderRequested = false;
@@ -57,6 +139,22 @@ function render() {
 
 // Add change listener to controls so they trigger a render when moved
 controls.addEventListener('change', requestRender);
+
+export function getCameraState() {
+  const p = camera.position;
+  const t = controls.target;
+  return `${p.x.toFixed(3)},${p.y.toFixed(3)},${p.z.toFixed(3)},${t.x.toFixed(3)},${t.y.toFixed(3)},${t.z.toFixed(3)}`;
+}
+
+export function setCameraState(stateStr) {
+  if (!stateStr) return;
+  const parts = stateStr.split(',').map(Number);
+  if (parts.length !== 6 || parts.some(isNaN)) return;
+  camera.position.set(parts[0], parts[1], parts[2]);
+  controls.target.set(parts[3], parts[4], parts[5]);
+  controls.update();
+  requestRender();
+}
 
 // ── CUSTOM ZOOM (Targeted raycast) ──
 const _zRay = new THREE.Raycaster();
@@ -116,6 +214,7 @@ scene.add(under);
 new ResizeObserver(() => {
   const w = canvasWrap.clientWidth;
   const h = canvasWrap.clientHeight;
+  if (w === 0 || h === 0) return;
   camera.aspect = w / h;
   camera.updateProjectionMatrix();
   renderer.setSize(w, h);

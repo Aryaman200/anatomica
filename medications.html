@@ -43,12 +43,34 @@
   <link rel="icon" type="image/svg+xml" href="assets/icon.svg">
   <link rel="icon" type="image/x-icon" href="assets/icon.ico">
   <link rel="apple-touch-icon" href="assets/icon.png">
-  <link rel="stylesheet" href="css/styles.css" />
-  <link rel="stylesheet" href="css/pages.css" />
+  <link rel="stylesheet" href="css/styles.css?v=1784611432079" />
+  <link rel="stylesheet" href="css/pages.css?v=1784611432079" />
   <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 
 <body class="page-body">
+
+  <!-- ── AUTH GATE — fullscreen showcase + login-first wall ─────────── -->
+  <div id="auth-gate" role="dialog" aria-modal="true" aria-label="Sign in to Anatomy101">
+    <div class="gate-showcase"></div>
+    <div class="gate-scrim"></div>
+    <div class="gate-content">
+      <img class="gate-logo" src="assets/icon.png" alt="" aria-hidden="true">
+      <h1 class="gate-title">Anatomy101</h1>
+      <p class="gate-tagline">A high-fidelity, interactive 3D human body atlas</p>
+      <p class="gate-caption" id="gate-caption"></p>
+      <button class="gate-login-btn" type="button">
+        <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path fill="#fff" d="M12.24 10.285V14.4h6.806c-.275 1.765-2.056 5.174-6.806 5.174-4.095 0-7.439-3.389-7.439-7.574s3.344-7.574 7.439-7.574c2.33 0 3.891.989 4.785 1.849l3.254-3.138C18.189 1.186 15.479 0 12.24 0c-6.635 0-12 5.365-12 12s5.365 12 12 12c6.926 0 11.52-4.869 11.52-11.726 0-.788-.085-1.39-.189-1.989H12.24z"/></svg>
+        Continue with Google
+      </button>
+      <p class="gate-sub">Free to use. Sign in to start exploring — takes 5 seconds.</p>
+    </div>
+  </div>
+  <script type="module">
+    import { initAuthGate } from './js/authGate.js?v=1784611432079';
+    initAuthGate();
+  </script>
+
   <header id="site-header"></header>
 
   <main class="page-wrap">
@@ -74,7 +96,7 @@
 
   <footer id="site-footer"></footer>
 
-  <script type="module" src="js/page-medications.js"></script>
+  <script type="module" src="js/page-medications.js?v=1784611432079"></script>
 </body>
 
 </html>
