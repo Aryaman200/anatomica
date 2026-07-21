@@ -16,7 +16,7 @@
  * a returning signed-in user's getSession() below resolves from local storage
  * — no network round-trip, no re-login, no showcase replay.
  */
-import { getSession, loginWithGoogle, onAuthStateChange } from './auth.js?v=1784611432079';
+import { getSession, loginWithGoogle, onAuthStateChange } from './auth.js?v=1784613352897';
 
 const SHOWCASE_SLIDES = [
   { file: 'home.png', caption: 'Six body systems, rendered simultaneously in real-time 3D' },

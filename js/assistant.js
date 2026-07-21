@@ -21,7 +21,7 @@
 //  at it and blank out apiKey.
 // ============================================================================
 
-import { AI_CONFIG } from './ai-config.js?v=1784611432079';
+import { AI_CONFIG } from './ai-config.js?v=1784613352897';
 
 // All AI requests go through the /api/chat Vercel Edge Function which holds
 // the real Google AI key server-side. The browser never sees the key.
@@ -87,8 +87,8 @@ let busy = false;
 let used = 0;           // messages spent against FREE_MESSAGES
 let panel, listEl, inputEl, sendBtn, triggerBtns = [], quotaEl, composeEl;
 
-import { getSession, loginWithGoogle, onAuthStateChange } from './auth.js?v=1784611432079';
-import { checkout } from './payment.js?v=1784611432079';
+import { getSession, loginWithGoogle, onAuthStateChange } from './auth.js?v=1784613352897';
+import { checkout } from './payment.js?v=1784613352897';
 
 let session = null;
 let userState = null; // { tier, messagesLeft, messagesAllowed }

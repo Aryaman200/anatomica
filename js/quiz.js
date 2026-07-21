@@ -1,9 +1,9 @@
 /* quiz.js — NEET Biology Quiz Engine */
 'use strict';
 
-import { getSession, loginWithGoogle } from './auth.js?v=1784611432079';
-import { checkout, showPremiumModal } from './payment.js?v=1784611432079';
-import { topicFor, analyze } from './feedback.js?v=1784611432079';
+import { getSession, loginWithGoogle } from './auth.js?v=1784613352897';
+import { checkout, showPremiumModal } from './payment.js?v=1784613352897';
+import { topicFor, analyze } from './feedback.js?v=1784613352897';
 
 let session = null;
 let userState = null;

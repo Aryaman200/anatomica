@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { bounds } from './loader.js?v=1784611432079';
+import { bounds } from './loader.js?v=1784613352897';
 
 export const canvasWrap = document.getElementById('canvas-wrap');
 export const canvas     = document.getElementById('three-canvas');

@@ -1,16 +1,16 @@
 import * as THREE from 'three';
-import { SYSTEMS, SYS_HEX } from './config.js?v=1784611432079';
-import { SYSTEM_NAME } from './data/anatomy.js?v=1784611432079';
-import { GROUP_BY_LABEL, groupsForStructure, isGroupLabel, isModelled } from './data/groups.js?v=1784611432079';
-import { scene, camera, controls, renderer, requestRender, getCameraState } from './scene.js?v=1784611432079';
-import { getGroups, searchIndex, getSearchIndex, bounds } from './loader.js?v=1784611432079';
-import { applyStyleToMaterial } from './style.js?v=1784611432079';
-import { getPartInfo } from './data/parts.js?v=1784611432079';
-import { CONDITIONS, getConditionsForPart, SEVERITY_LABEL, SEVERITY_COLOR, cleanDesc } from './data/conditions.js?v=1784611432079';
-import { getMedicationsForCondition, getMedicationsForOrgan } from './data/medications.js?v=1784611432079';
-import { getHabitsForOrgan } from './data/habits.js?v=1784611432079';
-import { startWalkthrough } from './walkthrough.js?v=1784611432079';
-import { getSession } from './auth.js?v=1784611432079';
+import { SYSTEMS, SYS_HEX } from './config.js?v=1784613352897';
+import { SYSTEM_NAME } from './data/anatomy.js?v=1784613352897';
+import { GROUP_BY_LABEL, groupsForStructure, isGroupLabel, isModelled } from './data/groups.js?v=1784613352897';
+import { scene, camera, controls, renderer, requestRender, getCameraState } from './scene.js?v=1784613352897';
+import { getGroups, searchIndex, getSearchIndex, bounds } from './loader.js?v=1784613352897';
+import { applyStyleToMaterial } from './style.js?v=1784613352897';
+import { getPartInfo } from './data/parts.js?v=1784613352897';
+import { CONDITIONS, getConditionsForPart, SEVERITY_LABEL, SEVERITY_COLOR, cleanDesc } from './data/conditions.js?v=1784613352897';
+import { getMedicationsForCondition, getMedicationsForOrgan } from './data/medications.js?v=1784613352897';
+import { getHabitsForOrgan } from './data/habits.js?v=1784613352897';
+import { startWalkthrough } from './walkthrough.js?v=1784613352897';
+import { getSession } from './auth.js?v=1784613352897';
 
 /* ── SIDEBAR SYSTEM LIST ── */
 export const sysList   = document.getElementById('sys-list');
@@ -501,7 +501,7 @@ export function openPartPanel(label, sysId) {
   const notesBtn = dpScroll.querySelector('#part-notes-btn');
   if (notesBtn) {
     notesBtn.addEventListener('click', () => {
-      import('./notes.js?v=1784611432079').then(m => {
+      import('./notes.js?v=1784613352897').then(m => {
         m.openNotesWidget(label);
       });
     });
