@@ -7,6 +7,7 @@ const LIMITS = {
   plus: { quizzes: 2 },
   pro:  { quizzes: 99999 }
 };
+const FREE_MAX_QUESTIONS = 20;
 
 function getWeekStart() {
   const d = new Date();
@@ -26,7 +27,7 @@ export default async function handler(req) {
   }
 
   try {
-    const { difficulty } = await req.json();
+    const { difficulty, count } = await req.json();
 
     // Get tier
     const { data: sub } = await supabase
@@ -34,12 +35,18 @@ export default async function handler(req) {
       .select('tier')
       .eq('user_id', user.id)
       .single();
-    
+
     const tier = sub?.tier || 'free';
     const limit = LIMITS[tier]?.quizzes || LIMITS.free.quizzes;
 
-    if (tier === 'free' && difficulty !== 'Easy' && difficulty !== 'all') {
-       return new Response(JSON.stringify({ error: 'LIMIT_REACHED', message: 'Free tier is limited to Easy quizzes.' }), { status: 429 });
+    if (tier === 'free') {
+      // "all" mixes in Medium/Hard, so it's gated the same as picking them directly.
+      if (difficulty !== 'Easy') {
+        return new Response(JSON.stringify({ error: 'LIMIT_REACHED', message: 'Free tier is Easy-only. Upgrade to Plus or Pro for Medium, Hard, and mixed-difficulty quizzes.' }), { status: 429 });
+      }
+      if (typeof count === 'number' && count > FREE_MAX_QUESTIONS) {
+        return new Response(JSON.stringify({ error: 'LIMIT_REACHED', message: `Free tier is capped at ${FREE_MAX_QUESTIONS} questions per quiz. Upgrade to Plus or Pro for longer quizzes.` }), { status: 429 });
+      }
     }
 
     const today = new Date().toISOString().split('T')[0];

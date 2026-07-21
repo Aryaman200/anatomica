@@ -1,8 +1,9 @@
 /* quiz.js — NEET Biology Quiz Engine */
 'use strict';
 
-import { getSession, loginWithGoogle } from './auth.js';
-import { checkout, showPremiumModal } from './payment.js';
+import { getSession, loginWithGoogle } from './auth.js?v=1784611432079';
+import { checkout, showPremiumModal } from './payment.js?v=1784611432079';
+import { topicFor, analyze } from './feedback.js?v=1784611432079';
 
 let session = null;
 let userState = null;
@@ -17,7 +18,9 @@ const state = {
     count: 10,
     yearRange: 'all',
     difficulty: 'all',
+    subject: 'all',
     timerOn: true,
+    lang: 'en',
   },
   timerInterval: null,
   timerSecondsLeft: 90,
@@ -32,10 +35,12 @@ const screens = {
 
 // Setup
 const chipGroups = {
-  count:  document.getElementById('q-count'),
-  year:   document.getElementById('year-filter'),
-  diff:   document.getElementById('diff-filter'),
-  timer:  document.getElementById('timer-toggle'),
+  count:   document.getElementById('q-count'),
+  year:    document.getElementById('year-filter'),
+  diff:    document.getElementById('diff-filter'),
+  subject: document.getElementById('subject-filter'),
+  timer:   document.getElementById('timer-toggle'),
+  lang:    document.getElementById('lang-toggle'),
 };
 const btnStart  = document.getElementById('btn-start');
 const statTotal = document.getElementById('stat-total');
@@ -63,6 +68,7 @@ const resCorrect    = document.getElementById('res-correct');
 const resWrong      = document.getElementById('res-wrong');
 const resSkipped    = document.getElementById('res-skipped');
 const resAccuracy   = document.getElementById('res-accuracy');
+const subjectChart  = document.getElementById('subject-chart');
 const yearChart     = document.getElementById('year-chart');
 const weakList      = document.getElementById('weak-list');
 const recoList      = document.getElementById('reco-list');
@@ -86,6 +92,7 @@ export async function init() {
     return;
   }
   state.allQuestions = QUIZ_DATA;
+  enforceFreeTierDefaults();
   updateStatPills();
   wireChipGroups();
   btnStart.addEventListener('click', startQuiz);
@@ -93,6 +100,30 @@ export async function init() {
   btnNext.addEventListener('click', nextQuestion);
   btnRetry.addEventListener('click', retryQuiz);
   btnNewQuiz.addEventListener('click', newQuiz);
+}
+
+// ── Tier helpers ────────────────────────────────────────────────
+// No session and free tier are treated identically: both get the same caps.
+// Only an authenticated 'plus'/'pro' subscription unlocks the extras below.
+function currentTier() {
+  return userState?.tier || 'free';
+}
+
+const FREE_MAX_QUESTIONS = 20;
+
+// Free tier is Easy-only and capped at 20 questions. Force those defaults on
+// load so a user who never touches a chip can't slip through on the page's
+// original defaults (diff defaults to "all", count higher tiers might set).
+function enforceFreeTierDefaults() {
+  if (currentTier() !== 'free') return;
+
+  state.settings.difficulty = 'Easy';
+  chipGroups.diff.querySelectorAll('.quiz-chip').forEach(c =>
+    c.classList.toggle('active', c.dataset.value === 'Easy'));
+
+  if (state.settings.count > FREE_MAX_QUESTIONS) state.settings.count = 10;
+  chipGroups.count.querySelectorAll('.quiz-chip').forEach(c =>
+    c.classList.toggle('active', c.dataset.value === String(state.settings.count)));
 }
 
 // ── Stat pills on setup screen ─────────────────────────────────
@@ -110,24 +141,39 @@ function wireChipGroups() {
       chip.addEventListener('click', () => {
         const val = chip.dataset.value;
 
-        // Tier enforcement for difficulty
-        if (key === 'diff' && val !== 'Easy' && val !== 'all') {
+        // Tier enforcement for difficulty — free tier is Easy-only. "All" mixes
+        // in Medium/Hard, so it's gated the same as picking Medium/Hard directly.
+        if (key === 'diff' && val !== 'Easy') {
           if (!userState) {
-            showPremiumModal('Login Required', 'Please log in to access Medium and Hard questions.', 'Log In', () => loginWithGoogle());
+            showPremiumModal('Login Required', 'Please log in to access more difficulty options.', 'Log In', () => loginWithGoogle());
             return;
           }
           if (userState.tier === 'free') {
-            showPremiumModal('Plus / Pro Required', 'Medium and Hard questions are available exclusively on the Plus and Pro tiers.', 'Upgrade Now', () => checkout('plus'));
+            showPremiumModal('Plus / Pro Required', '"All", Medium, and Hard questions are available exclusively on the Plus and Pro tiers. Free tier is Easy-only.', 'Upgrade Now', () => checkout('plus'));
+            return;
+          }
+        }
+
+        // Tier enforcement for question count — free tier capped at 20/quiz.
+        if (key === 'count' && parseInt(val) > FREE_MAX_QUESTIONS) {
+          if (!userState) {
+            showPremiumModal('Login Required', 'Please log in to unlock longer quizzes.', 'Log In', () => loginWithGoogle());
+            return;
+          }
+          if (userState.tier === 'free') {
+            showPremiumModal('Plus / Pro Required', 'Quizzes longer than 20 questions are available on the Plus and Pro tiers.', 'Upgrade Now', () => checkout('plus'));
             return;
           }
         }
 
         group.querySelectorAll('.quiz-chip').forEach(c => c.classList.remove('active'));
         chip.classList.add('active');
-        if (key === 'count')  state.settings.count     = parseInt(val);
-        if (key === 'year')   state.settings.yearRange  = val;
-        if (key === 'diff')   state.settings.difficulty = val;
-        if (key === 'timer')  state.settings.timerOn    = val === 'on';
+        if (key === 'count')   state.settings.count      = parseInt(val);
+        if (key === 'year')    state.settings.yearRange  = val;
+        if (key === 'diff')    state.settings.difficulty = val;
+        if (key === 'subject') state.settings.subject    = val;
+        if (key === 'timer')   state.settings.timerOn    = val === 'on';
+        if (key === 'lang')    state.settings.lang       = val;
         updateStatPills();
       });
     });
@@ -152,6 +198,10 @@ function computeDifficulty(q) {
 // ── Filtering ──────────────────────────────────────────────────
 function getFilteredQuestions() {
   return state.allQuestions.filter(q => {
+    // Subject filter — 'all' means no subject constraint
+    if (state.settings.subject !== 'all') {
+      if (q.subject !== state.settings.subject) return false;
+    }
     // Year filter
     if (state.settings.yearRange !== 'all') {
       const [from, to] = state.settings.yearRange.split('-').map(Number);
@@ -174,6 +224,29 @@ function shuffle(arr) {
   return a;
 }
 
+// ── Fetch due topics ───────────────────────────────────────────
+async function fetchDueTopics() {
+  // Signed-in users read their spaced-repetition schedule from the server;
+  // anonymous users fall back to a local-only schedule in localStorage.
+  if (!session) {
+    const local = JSON.parse(localStorage.getItem('anatomy101_progress') || '[]');
+    const now = new Date().getTime();
+    return new Set(local.filter(d => new Date(d.next_review_date).getTime() <= now).map(d => d.topic));
+  }
+  try {
+    const res = await fetch('/api/progress', {
+      headers: { 'Authorization': `Bearer ${session.access_token}` }
+    });
+    if (!res.ok) return new Set();
+    const data = await res.json();
+    const now = new Date().getTime();
+    // Return topics whose next_review_date is in the past
+    return new Set(data.filter(d => new Date(d.next_review_date).getTime() <= now).map(d => d.topic));
+  } catch (e) {
+    return new Set();
+  }
+}
+
 // ── Start quiz ─────────────────────────────────────────────────
 async function startQuiz() {
   if (!session) {
@@ -187,11 +260,11 @@ async function startQuiz() {
     return;
   }
 
-  // Server check
+  // Server-side weekly-quota + tier gate. This is the real limit; the client
+  // never bypasses it (even locally), so there's no path for a user to skip it.
   const origText = btnStart.textContent;
   btnStart.textContent = 'Checking quota...';
   btnStart.disabled = true;
-
   try {
     const res = await fetch('/api/quiz/check', {
       method: 'POST',
@@ -199,11 +272,9 @@ async function startQuiz() {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${session.access_token}`
       },
-      body: JSON.stringify({ difficulty: state.settings.difficulty })
+      body: JSON.stringify({ difficulty: state.settings.difficulty, count: state.settings.count })
     });
-
-    const data = await res.json();
-    
+    const data = await res.json().catch(() => ({}));
     if (!res.ok) {
       if (res.status === 401) {
         alert('Your session expired. Please log in again.');
@@ -212,27 +283,49 @@ async function startQuiz() {
       } else {
         alert('An error occurred. Please try again later.');
       }
-      btnStart.textContent = origText;
-      btnStart.disabled = false;
       return;
     }
   } catch (err) {
     alert('Failed to connect to server. Check your connection.');
+    return;
+  } finally {
     btnStart.textContent = origText;
     btnStart.disabled = false;
-    return;
   }
-  
-  btnStart.textContent = origText;
-  btnStart.disabled = false;
-  const count = Math.min(state.settings.count, pool.length);
-  state.quizQuestions = shuffle(pool).slice(0, count);
+
+  await beginSession(pool);
+}
+
+// ── Build the question set (spaced-repetition biased) and start ──
+// Spaced repetition (biasing toward due-for-review topics) is a Plus/Pro
+// feature; free tier always gets a plain random draw from the filtered pool.
+async function beginSession(pool) {
+  const tier = currentTier();
+  const srEnabled = tier === 'plus' || tier === 'pro';
+  const dueTopics = srEnabled ? await fetchDueTopics() : new Set();
+  let selected;
+  if (dueTopics.size > 0) {
+    // Spaced repetition: front-load topics that are due for review, filling up
+    // to ~70% of the session with them, then top up from everything else.
+    const priority = pool.filter(q => dueTopics.has(topicFor(q).topic));
+    const standard = pool.filter(q => !dueTopics.has(topicFor(q).topic));
+
+    const priorityCount = Math.min(priority.length, Math.ceil(state.settings.count * 0.7));
+    selected = shuffle(priority).slice(0, priorityCount);
+
+    const remCount = state.settings.count - selected.length;
+    selected = shuffle([...selected, ...shuffle(standard).slice(0, remCount)]);
+  } else {
+    selected = shuffle(pool).slice(0, state.settings.count);
+  }
+
+  const count = Math.min(state.settings.count, selected.length);
+  state.quizQuestions = selected.slice(0, count);
   state.currentIndex  = 0;
   state.answers       = [];
 
   showScreen('quiz');
-  if (!state.settings.timerOn) timerBadge.classList.add('hidden');
-  else timerBadge.classList.remove('hidden');
+  timerBadge.classList.toggle('hidden', !state.settings.timerOn);
 
   renderQuestion();
 }
@@ -257,7 +350,8 @@ function renderQuestion() {
   qDiffBadge.dataset.diff = diff;
 
   // Question text
-  questionText.textContent = q.question.text;
+  const isHi = state.settings.lang === 'hi';
+  questionText.textContent = isHi && q.question.text_hi ? q.question.text_hi : q.question.text;
 
   // Options
   optionsGrid.innerHTML = '';
@@ -266,17 +360,24 @@ function renderQuestion() {
     btn.className = 'option-btn';
     btn.setAttribute('role', 'radio');
     btn.setAttribute('aria-checked', 'false');
-    btn.setAttribute('aria-label', `Option ${opt.id}: ${opt.text}`);
+    
+    const optText = isHi && opt.text_hi ? opt.text_hi : opt.text;
+    btn.setAttribute('aria-label', `Option ${opt.id}: ${optText}`);
     btn.dataset.id = opt.id;
-    btn.innerHTML = `<span class="opt-letter">${opt.id}</span><span>${escapeHtml(opt.text)}</span>`;
+    btn.innerHTML = `<span class="opt-letter">${opt.id}</span><span>${escapeHtml(optText)}</span>`;
     btn.addEventListener('click', () => selectOption(opt.id));
     optionsGrid.appendChild(btn);
   });
 
   btnNext.disabled = true;
+  state.qStartTime = performance.now();
 
   // Timer
   if (state.settings.timerOn) startTimer();
+}
+
+function elapsedSeconds() {
+  return state.qStartTime ? (performance.now() - state.qStartTime) / 1000 : null;
 }
 
 function escapeHtml(str) {
@@ -318,6 +419,7 @@ function selectOption(selectedId) {
     correct:    correctId,
     isCorrect,
     skipped:    false,
+    timeTaken:  elapsedSeconds(),
   });
 
   btnNext.disabled = false;
@@ -334,6 +436,7 @@ function skipQuestion() {
     correct:    q.answer.correct,
     isCorrect:  false,
     skipped:    true,
+    timeTaken:  elapsedSeconds(),
   });
   advance();
 }
@@ -373,215 +476,6 @@ function updateTimerDisplay() {
   timerDisplay.textContent = `${m}:${s.toString().padStart(2, '0')}`;
 }
 
-// ── Topic Classification Engine ───────────────────────────────
-// Maps keywords in question text → NEET Biology topic + NCERT chapter
-const TOPIC_MAP = [
-  {
-    topic: 'Photosynthesis',
-    ncert: 'Class 11 Ch.13 – Photosynthesis in Higher Plants',
-    keys: ['photosynthesis', 'chlorophyll', 'thylakoid', 'stroma', 'calvin', 'light reaction', 'dark reaction',
-           'photorespiration', 'c3', 'c4', 'cam', 'rubisco', 'noncyclic', 'cyclic photophosphorylation',
-           'antenna', 'photosystem', 'ps i', 'ps ii', 'z scheme', 'atp synthesis', 'f0f1'],
-  },
-  {
-    topic: 'Respiration',
-    ncert: 'Class 11 Ch.14 – Respiration in Plants',
-    keys: ['glycolysis', 'krebs cycle', 'tca', 'electron transport', 'oxidative phosphorylation',
-           'fermentation', 'atp', 'nadh', 'fadh', 'cytochrome', 'mitochondria', 'anaerobic', 'aerobic',
-           'pyruvate', 'acetyl coa', 'substrate level', 'respiratory quotient', 'rq'],
-  },
-  {
-    topic: 'Plant Growth & Hormones',
-    ncert: 'Class 11 Ch.15 – Plant Growth and Development',
-    keys: ['auxin', 'gibberellin', 'cytokinin', 'abscisic', 'ethylene', 'phytohormone', 'apical dominance',
-           'bolting', 'vernalisation', 'photoperiodism', 'senescence', 'dormancy', 'avena', 'iba', 'naa', 'ga3'],
-  },
-  {
-    topic: 'Cell Structure & Organelles',
-    ncert: 'Class 11 Ch.8 – Cell: The Unit of Life',
-    keys: ['mitochondria', 'chloroplast', 'ribosome', 'golgi', 'endoplasmic reticulum', 'lysosome', 'vacuole',
-           'centrosome', 'centriole', 'nucleosome', 'chromatin', 'cell wall', 'plasma membrane',
-           'fluid mosaic', 'tonoplast', 'peroxisome', 'glyoxysome', 'microtubule', 'microfilament'],
-  },
-  {
-    topic: 'Cell Division',
-    ncert: 'Class 11 Ch.10 – Cell Cycle and Cell Division',
-    keys: ['mitosis', 'meiosis', 'prophase', 'metaphase', 'anaphase', 'telophase', 'interphase',
-           'synapsis', 'crossing over', 'chiasmata', 'bivalent', 'spindle', 'cytokinesis',
-           'leptotene', 'zygotene', 'pachytene', 'diplotene', 'diakinesis', 'checkpoints'],
-  },
-  {
-    topic: 'Biomolecules',
-    ncert: 'Class 11 Ch.9 – Biomolecules',
-    keys: ['protein', 'carbohydrate', 'lipid', 'nucleic acid', 'amino acid', 'enzyme', 'substrate',
-           'active site', 'coenzyme', 'cofactor', 'inhibitor', 'allosteric', 'dna', 'rna',
-           'purine', 'pyrimidine', 'adenine', 'guanine', 'thymine', 'uracil', 'cytosine',
-           'phosphodiester', 'peptide bond', 'denaturation'],
-  },
-  {
-    topic: 'Genetics & Heredity',
-    ncert: 'Class 12 Ch.5 – Principles of Inheritance and Variation',
-    keys: ['mendel', 'dominance', 'recessiv', 'codominance', 'incomplete dominance', 'dihybrid',
-           'monohybrid', 'genotype', 'phenotype', 'allele', 'heterozygous', 'homozygous',
-           'sex-linked', 'haemophilia', 'colour blind', 'pedigree', 'test cross', 'back cross',
-           'polygenic', 'pleiotropy', 'epistasis', 'linkage', 'mutation'],
-  },
-  {
-    topic: 'Molecular Biology & DNA',
-    ncert: 'Class 12 Ch.6 – Molecular Basis of Inheritance',
-    keys: ['replication', 'transcription', 'translation', 'mrna', 'trna', 'rrna', 'codon', 'anticodon',
-           'operon', 'lac operon', 'trp operon', 'promoter', 'repressor', 'chromosome', 'karyotype',
-           'okazaki', 'helicase', 'polymerase', 'ligase', 'pcr', 'recombinant dna', 'restriction enzyme',
-           'plasmid', 'vector', 'gel electrophoresis', 'southern blot'],
-  },
-  {
-    topic: 'Human Physiology – Digestion',
-    ncert: 'Class 11 Ch.16 – Digestion and Absorption',
-    keys: ['digestion', 'stomach', 'intestine', 'duodenum', 'jejunum', 'ileum', 'colon', 'rectum',
-           'pepsin', 'trypsin', 'amylase', 'lipase', 'bile', 'peristalsis', 'absorption',
-           'villus', 'villi', 'chyme', 'chylomicron', 'lacteals'],
-  },
-  {
-    topic: 'Human Physiology – Respiration',
-    ncert: 'Class 11 Ch.17 – Breathing and Exchange of Gases',
-    keys: ['lung', 'trachea', 'bronchus', 'alveoli', 'diaphragm', 'breathing', 'tidal volume',
-           'vital capacity', 'residual volume', 'haemoglobin', 'oxygen dissociation', 'bohr effect',
-           'co2 transport', 'bicarbonate', 'asthma', 'emphysema'],
-  },
-  {
-    topic: 'Human Physiology – Circulation',
-    ncert: 'Class 11 Ch.18 – Body Fluids and Circulation',
-    keys: ['heart', 'blood', 'artery', 'vein', 'capillary', 'cardiac cycle', 'systole', 'diastole',
-           'ecg', 'blood pressure', 'pulse', 'lymph', 'plasma', 'rbc', 'wbc', 'platelet',
-           'coagulation', 'fibrin', 'thrombin', 'abo', 'rh factor', 'pacemaker', 'av node', 'sa node'],
-  },
-  {
-    topic: 'Human Physiology – Excretion',
-    ncert: 'Class 11 Ch.19 – Excretory Products and their Elimination',
-    keys: ['kidney', 'nephron', 'glomerulus', 'bowman', 'urea', 'uric acid', 'filtration',
-           'reabsorption', 'secretion', 'loop of henle', 'pct', 'dct', 'collecting duct',
-           'juxtaglomerular', 'adh', 'aldosterone', 'dialysis', 'micturition'],
-  },
-  {
-    topic: 'Human Physiology – Neural Control',
-    ncert: 'Class 11 Ch.21 – Neural Control and Coordination',
-    keys: ['neuron', 'nerve', 'brain', 'spinal cord', 'synapse', 'neurotransmitter', 'acetylcholine',
-           'action potential', 'resting potential', 'reflex', 'cerebrum', 'cerebellum', 'medulla',
-           'hypothalamus', 'thalamus', 'dendrite', 'axon', 'myelinated', 'saltatory conduction'],
-  },
-  {
-    topic: 'Human Physiology – Endocrinology',
-    ncert: 'Class 11 Ch.22 – Chemical Coordination and Integration',
-    keys: ['hormone', 'pituitary', 'thyroid', 'adrenal', 'pancreas', 'insulin', 'glucagon',
-           'thyroxine', 'adrenaline', 'cortisol', 'testosterone', 'oestrogen', 'progesterone',
-           'fsh', 'lh', 'gh', 'tsh', 'acth', 'oxytocin', 'vasopressin', 'melatonin', 'serotonin',
-           'diabetes', 'goitre', 'feedback'],
-  },
-  {
-    topic: 'Human Physiology – Locomotion',
-    ncert: 'Class 11 Ch.20 – Locomotion and Movement',
-    keys: ['muscle', 'sarcomere', 'actin', 'myosin', 'sliding filament', 'troponin', 'tropomyosin',
-           'bone', 'joint', 'tendon', 'ligament', 'skeletal', 'smooth muscle', 'cardiac muscle',
-           'tetanus', 'fatigue', 'tonus', 'spasm', 'osteoporosis', 'arthritis'],
-  },
-  {
-    topic: 'Reproduction in Plants',
-    ncert: 'Class 12 Ch.2 – Sexual Reproduction in Flowering Plants',
-    keys: ['pollination', 'fertilization', 'pollen', 'ovule', 'seed', 'fruit', 'flower',
-           'stamen', 'pistil', 'anther', 'stigma', 'style', 'ovary', 'calyx', 'corolla',
-           'tapetum', 'sporopollenin', 'gametophyte', 'sporophyte', 'double fertilization',
-           'endosperm', 'embryo', 'germination'],
-  },
-  {
-    topic: 'Human Reproduction',
-    ncert: 'Class 12 Ch.3 – Human Reproduction',
-    keys: ['spermatogenesis', 'oogenesis', 'sperm', 'ovum', 'follicle', 'ovulation', 'menstrual',
-           'uterus', 'fallopian', 'placenta', 'implantation', 'embryogenesis', 'foetus',
-           'amniocentesis', 'sertoli', 'leydig', 'testosterone', 'gnrh', 'inhibin'],
-  },
-  {
-    topic: 'Reproductive Health & Contraception',
-    ncert: 'Class 12 Ch.4 – Reproductive Health',
-    keys: ['contraception', 'iud', 'vasectomy', 'tubectomy', 'barrier', 'condom', 'oral pill',
-           'stds', 'hiv', 'aids', 'mtp', 'amniocentesis', 'ivf', 'zift', 'gift', 'infertility',
-           'artificial insemination'],
-  },
-  {
-    topic: 'Evolution',
-    ncert: 'Class 12 Ch.7 – Evolution',
-    keys: ['darwin', 'natural selection', 'evolution', 'homologous', 'analogous', 'fossils',
-           'vestigial', 'convergent', 'divergent', 'adaptive radiation', 'hardy weinberg',
-           'genetic drift', 'gene flow', 'mutation pressure', 'species', 'speciation',
-           'isolation', 'lamarck'],
-  },
-  {
-    topic: 'Human Health & Disease',
-    ncert: 'Class 12 Ch.8 – Human Health and Disease',
-    keys: ['immunity', 'antibody', 'antigen', 'vaccine', 'b cell', 't cell', 'lymphocyte',
-           'malaria', 'typhoid', 'pneumonia', 'cancer', 'tumour', 'metastasis', 'drugs',
-           'addiction', 'passive immunity', 'active immunity', 'autoimmune', 'allergy'],
-  },
-  {
-    topic: 'Microbes & Biotechnology Applications',
-    ncert: 'Class 12 Ch.10 – Microbes in Human Welfare',
-    keys: ['bacteria', 'virus', 'fungi', 'biogas', 'fermentation', 'sewage treatment',
-           'biofertilizer', 'rhizobium', 'mycorrhiza', 'antibiotics', 'penicillin', 'yeast',
-           'biocontrol', 'baculovirus', 'trichoderma'],
-  },
-  {
-    topic: 'Biotechnology',
-    ncert: 'Class 12 Ch.11 – Biotechnology: Principles and Processes',
-    keys: ['recombinant dna', 'restriction enzyme', 'ligase', 'plasmid', 'vector', 'gel electrophoresis',
-           'pcr', 'polymerase chain reaction', 'cloning', 'southern blot', 'dna fingerprinting',
-           'insulin production', 'bt cotton', 'golden rice', 'stem cell', 'gene therapy'],
-  },
-  {
-    topic: 'Ecology & Environment',
-    ncert: 'Class 12 Ch.13 – Organisms and Populations / Ch.14 – Ecosystem',
-    keys: ['ecosystem', 'food chain', 'food web', 'trophic level', 'energy flow', 'decomposer',
-           'producer', 'consumer', 'biomass', 'productivity', 'population', 'natality', 'mortality',
-           'carrying capacity', 'logistic', 'gause', 'competition', 'predation', 'parasitism',
-           'mutualism', 'commensalism'],
-  },
-  {
-    topic: 'Biodiversity & Conservation',
-    ncert: 'Class 12 Ch.15 – Biodiversity and Conservation',
-    keys: ['biodiversity', 'species richness', 'endemic', 'hotspot', 'extinction', 'iucn',
-           'red list', 'national park', 'sanctuary', 'biosphere reserve', 'in situ', 'ex situ',
-           'cites', 'biodiversity loss', 'deforestation', 'joint forest management'],
-  },
-  {
-    topic: 'Structural Organisation (Plant & Animal)',
-    ncert: 'Class 11 Ch.5–6 – Morphology & Anatomy of Flowering Plants / Animal Tissues',
-    keys: ['tissue', 'meristem', 'parenchyma', 'collenchyma', 'sclerenchyma', 'xylem', 'phloem',
-           'epidermis', 'cortex', 'pith', 'epithelium', 'connective tissue', 'muscle tissue',
-           'nervous tissue', 'root', 'shoot', 'leaf modification', 'stem modification'],
-  },
-  {
-    topic: 'Biological Classification',
-    ncert: 'Class 11 Ch.2 – Biological Classification',
-    keys: ['kingdom', 'monera', 'protista', 'fungi', 'plantae', 'animalia', 'archaebacteria',
-           'eubacteria', 'cyanobacteria', 'virus', 'viroid', 'lichen', 'algae', 'bryophyte',
-           'pteridophyte', 'gymnosperm', 'angiosperm', 'nomenclature', 'binomial', 'taxonomy'],
-  },
-  {
-    topic: 'Animal Kingdom',
-    ncert: 'Class 11 Ch.4 – Animal Kingdom',
-    keys: ['porifera', 'cnidaria', 'platyhelminthes', 'nematoda', 'annelida', 'mollusca', 'arthropoda',
-           'echinodermata', 'chordata', 'vertebrate', 'invertebrate', 'coelom', 'symmetry',
-           'notochord', 'mammalia', 'aves', 'reptilia', 'amphibia', 'pisces', 'periplaneta'],
-  },
-];
-
-// Classify a question to its NEET topic
-function classifyQuestion(q) {
-  const txt = (q.question.text + ' ' + q.options.map(o => o.text).join(' ')).toLowerCase();
-  for (const t of TOPIC_MAP) {
-    if (t.keys.some(k => txt.includes(k))) return t;
-  }
-  return { topic: 'General Biology', ncert: 'Review NCERT Class 11 & 12 thoroughly' };
-}
-
 // ── Results ────────────────────────────────────────────────────
 function showResults() {
   stopTimer();
@@ -613,34 +507,85 @@ function showResults() {
   resSkipped.textContent  = skipped;
   resAccuracy.textContent = accuracy + '%';
 
-  buildTopicBreakdown();
+  // Run the feedback engine once and feed every results section from it.
+  // analyze() expects `correct` as a boolean, so map isCorrect → correct.
+  const analysis = analyze(
+    state.answers.map(a => ({
+      questionId: a.questionId,
+      selected:   a.selected,
+      correct:    a.isCorrect,
+      skipped:    a.skipped,
+      timeTaken:  a.timeTaken,
+    })),
+    state.quizQuestions,
+  );
+  state._analysis = analysis;
+
+  buildSubjectBreakdown(analysis);
+  buildTopicBreakdown(analysis);
   buildYearChart();
-  buildRecoList();
+  buildRecoList(analysis);
   buildReviewList();
   showScreen('results');
+
+  // Submit to progress API
+  const resultsPayload = state.answers.map(a => {
+    const { topic } = topicFor(a.question);
+    return { topic, isCorrect: !!(a.isCorrect && !a.skipped) };
+  });
+
+  if (session) {
+    fetch('/api/progress', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${session.access_token}`
+      },
+      body: JSON.stringify({ results: resultsPayload })
+    }).catch(console.error);
+  } else {
+    const local = JSON.parse(localStorage.getItem('anatomy101_progress') || '[]');
+    resultsPayload.forEach(res => {
+      let entry = local.find(x => x.topic === res.topic);
+      if (!entry) { entry = { topic: res.topic, level: 0 }; local.push(entry); }
+      if (res.isCorrect) { entry.level++; } else { entry.level = Math.max(0, entry.level - 1); }
+      const days = Math.pow(2, entry.level);
+      const d = new Date(); d.setDate(d.getDate() + days);
+      entry.next_review_date = d.toISOString();
+    });
+    localStorage.setItem('anatomy101_progress', JSON.stringify(local));
+  }
 }
 
-// ── Topic Breakdown (replaces old weak list) ───────────────────
-function buildTopicBreakdown() {
-  // Classify every answered question
-  const byTopic = {};
-  for (const a of state.answers) {
-    const classification = classifyQuestion(a.question);
-    const key = classification.topic;
-    if (!byTopic[key]) byTopic[key] = { ncert: classification.ncert, correct: 0, total: 0, wrongQs: [] };
-    byTopic[key].total++;
-    if (a.isCorrect) byTopic[key].correct++;
-    else if (!a.skipped) byTopic[key].wrongQs.push(a);
-  }
+// ── Subject breakdown ──────────────────────────────────────────
+const SUBJECT_ORDER = ['Biology', 'Physics', 'Chemistry'];
 
-  const items = Object.entries(byTopic).map(([topic, data]) => ({
-    topic,
-    ncert: data.ncert,
-    correct: data.correct,
-    total: data.total,
-    wrongQs: data.wrongQs,
-    pct: data.total > 0 ? Math.round((data.correct / data.total) * 100) : 0,
-  })).sort((a, b) => a.pct - b.pct);
+function buildSubjectBreakdown(analysis) {
+  const bySubject = analysis.bySubject || {};
+  const subjects = Object.keys(bySubject).sort((a, b) => {
+    const ia = SUBJECT_ORDER.indexOf(a), ib = SUBJECT_ORDER.indexOf(b);
+    return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib) || (a < b ? -1 : a > b ? 1 : 0);
+  });
+
+  subjectChart.innerHTML = '';
+  if (subjects.length === 0) { subjectChart.innerHTML = '<p class="empty-state">No data.</p>'; return; }
+
+  for (const s of subjects) {
+    const { correct, total, pct } = bySubject[s];
+    const cls = pct >= 70 ? 'high' : pct >= 40 ? 'medium' : 'low';
+    const row = document.createElement('div');
+    row.className = 'bar-row';
+    row.innerHTML = `
+      <span class="bar-label">${escapeHtml(s)}</span>
+      <div class="bar-track"><div class="bar-fill ${cls}" style="width:${pct}%"></div></div>
+      <span class="bar-pct">${correct}/${total} · ${pct}%</span>`;
+    subjectChart.appendChild(row);
+  }
+}
+
+// ── Topic breakdown (weak areas) — fed from analyze().byTopic ───
+function buildTopicBreakdown(analysis) {
+  const items = analysis.byTopic || []; // already sorted worst-first
 
   weakList.innerHTML = '';
   if (items.length === 0) { weakList.innerHTML = '<p class="empty-state">No data to show.</p>'; return; }
@@ -657,7 +602,7 @@ function buildTopicBreakdown() {
       <div class="weak-item-top">
         <div class="weak-info">
           <div class="weak-name">${escapeHtml(item.topic)}</div>
-          <div class="weak-ncert">${escapeHtml(item.ncert)}</div>
+          <div class="weak-ncert">${escapeHtml(item.subject)}</div>
         </div>
         <span class="weak-badge">${label}</span>
       </div>
@@ -669,9 +614,6 @@ function buildTopicBreakdown() {
       </div>`;
     weakList.appendChild(div);
   }
-
-  // Store for reco engine
-  state._topicData = items;
 }
 
 // ── Year chart ─────────────────────────────────────────────────
@@ -700,21 +642,20 @@ function buildYearChart() {
   }
 }
 
-// ── Recommendations ────────────────────────────────────────────
-function buildRecoList() {
+// ── Recommendations — fed from analyze().recommendations ───────
+function buildRecoList(analysis) {
   const recos = [];
   const answers = state.answers;
   const total   = answers.length;
   const correct = answers.filter(a => a.isCorrect).length;
   const accuracy = total > 0 ? (correct / total) * 100 : 0;
-  const topics = state._topicData || [];
 
   // Overall performance
   if (accuracy < 40) {
     recos.push({
       priority: 'critical',
       title: 'Foundation needs rebuilding',
-      body: 'Below 40% accuracy. Start by re-reading <strong>NCERT Class 11 & 12 Biology</strong> cover to cover — majority of NEET questions are lifted verbatim or closely paraphrased from NCERT.',
+      body: 'Below 40% accuracy. Start by re-reading <strong>NCERT Class 11 & 12</strong> cover to cover — majority of NEET questions are lifted verbatim or closely paraphrased from NCERT.',
     });
   } else if (accuracy < 70) {
     recos.push({
@@ -730,16 +671,15 @@ function buildRecoList() {
     });
   }
 
-  // Specific weak topics from classification
-  const weakTopics = topics.filter(t => t.pct < 50 && t.total >= 2);
-  if (weakTopics.length > 0) {
-    for (const t of weakTopics.slice(0, 3)) {
-      recos.push({
-        priority: t.pct < 30 ? 'critical' : 'high',
-        title: `Revise: ${t.topic}`,
-        body: `Scored <strong>${t.pct}%</strong> (${t.correct}/${t.total} correct). Open <strong>${escapeHtml(t.ncert)}</strong> and re-read it completely. Make a one-page summary of all diagrams, processes, and exceptions in this chapter.`,
-      });
-    }
+  // Topic-specific recommendations from the feedback engine.
+  // Weak-area recos come first (see analyze()); colour them by urgency.
+  for (const r of (analysis.recommendations || [])) {
+    const isWeak = r.reason.startsWith('Weak area');
+    recos.push({
+      priority: isWeak ? 'high' : 'medium',
+      title: `Revise: ${r.topic}`,
+      body: `<strong>${escapeHtml(r.subject)}</strong> — ${escapeHtml(r.reason)}`,
+    });
   }
 
   // Statement questions
@@ -816,13 +756,21 @@ function buildReviewList() {
   }
   for (const a of bad) {
     const q = a.question;
-    const topic = classifyQuestion(q);
+    const topic = topicFor(q); // { subject, topic, chapter }
     const selectedOpt = q.options.find(o => o.id === a.selected);
     const correctOpt  = q.options.find(o => o.id === a.correct);
     const div = document.createElement('div');
     div.className = `review-item ${a.skipped ? 'was-skipped' : 'was-wrong'}`;
 
-    const expl = q.answer.explanation?.trim();
+    const isHi = state.settings.lang === 'hi';
+    const qText = isHi && q.question.text_hi ? q.question.text_hi : q.question.text;
+    const explSrc = isHi && q.answer.explanation_hi ? q.answer.explanation_hi : q.answer.explanation;
+    const expl = explSrc?.trim();
+
+    const getOptText = (opt) => {
+      if (!opt) return '—';
+      return isHi && opt.text_hi ? escapeHtml(opt.text_hi) : escapeHtml(opt.text);
+    };
 
     div.innerHTML = `
       <div class="review-q-meta">
@@ -830,20 +778,20 @@ function buildReviewList() {
         <span class="badge badge-topic">${escapeHtml(topic.topic)}</span>
         ${a.skipped ? '<span class="badge badge-skipped">Skipped</span>' : ''}
       </div>
-      <p class="review-q-text">${escapeHtml(q.question.text)}</p>
+      <p class="review-q-text">${escapeHtml(qText)}</p>
       <div class="review-answers">
         ${a.skipped ? '' : `
           <div class="review-ans-row">
             <span class="review-ans-label">Your answer</span>
-            <span class="review-ans-val wrong">${selectedOpt ? escapeHtml(selectedOpt.text) : '—'}</span>
+            <span class="review-ans-val wrong">${getOptText(selectedOpt)}</span>
           </div>`}
         <div class="review-ans-row">
           <span class="review-ans-label">Correct answer</span>
-          <span class="review-ans-val correct">${correctOpt ? `<strong>${correctOpt.id}.</strong> ${escapeHtml(correctOpt.text)}` : a.correct}</span>
+          <span class="review-ans-val correct">${correctOpt ? `<strong>${correctOpt.id}.</strong> ${getOptText(correctOpt)}` : a.correct}</span>
         </div>
       </div>
       ${expl ? `<div class="review-explanation"><span class="expl-label">Explanation</span>${escapeHtml(expl)}</div>` : ''}
-      <div class="review-ncert">📖 Study: ${escapeHtml(topic.ncert)}</div>`;
+      <div class="review-ncert">📖 Study: ${escapeHtml(topic.chapter)}</div>`;
     reviewList.appendChild(div);
   }
 }

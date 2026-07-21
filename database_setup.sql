@@ -49,15 +49,45 @@ create table public.orders (
   updated_at timestamptz default now()
 );
 
+-- 4a. Create user_progress table (for Spaced Repetition)
+create table public.user_progress (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid references auth.users not null,
+  topic text not null,
+  correct_count int default 0,
+  total_attempts int default 0,
+  interval_days real default 1.0,
+  ease_factor real default 2.5,
+  next_review_date timestamptz default now(),
+  created_at timestamptz default now(),
+  updated_at timestamptz default now(),
+  unique(user_id, topic)
+);
+
+-- 4b. Create user_bookmarks table
+create table public.user_bookmarks (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid references auth.users not null,
+  part_id text not null,
+  note text default '',
+  created_at timestamptz default now(),
+  updated_at timestamptz default now(),
+  unique(user_id, part_id)
+);
+
 -- 5. Enable Row Level Security (RLS)
 alter table public.subscriptions enable row level security;
 alter table public.usage enable row level security;
 alter table public.events enable row level security;
 alter table public.orders enable row level security;
+alter table public.user_progress enable row level security;
+alter table public.user_bookmarks enable row level security;
 
 -- 6. Create Policies (Users can only read their own data)
 create policy "Users can view own subscription" on public.subscriptions for select using (auth.uid() = user_id);
 create policy "Users can view own usage" on public.usage for select using (auth.uid() = user_id);
+create policy "Users can view own progress" on public.user_progress for select using (auth.uid() = user_id);
+create policy "Users can view own bookmarks" on public.user_bookmarks for select using (auth.uid() = user_id);
 -- orders: no client policy on purpose => only the Edge/Node functions (service_role) touch it.
 
 -- Note: Inserts and Updates are handled server-side by our Vercel functions using the
