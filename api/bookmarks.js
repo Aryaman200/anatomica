@@ -44,5 +44,21 @@ export default async function handler(req) {
     return new Response(JSON.stringify(data), { status: 200, headers: { 'Content-Type': 'application/json' } });
   }
 
+  if (req.method === 'DELETE') {
+    let body;
+    try { body = await req.json(); } catch { return new Response('Invalid JSON', { status: 400 }); }
+    
+    const { part_id } = body;
+    if (!part_id) return new Response('part_id required', { status: 400 });
+
+    const { error } = await supabase
+      .from('user_bookmarks')
+      .delete()
+      .eq('user_id', user.id)
+      .eq('part_id', part_id);
+    if (error) return new Response(JSON.stringify({ error: error.message }), { status: 500 });
+    return new Response(JSON.stringify({ success: true, deleted: true }), { status: 200 });
+  }
+
   return new Response('Method not allowed', { status: 405 });
 }

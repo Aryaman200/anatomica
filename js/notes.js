@@ -171,14 +171,13 @@ class NoteWindow {
     local = local.filter(d => d.part_id !== this.context);
     localStorage.setItem('anatomy101_bookmarks', JSON.stringify(local));
 
+    this.close();
+
     // Check if export modal is open and update it
     const modal = document.getElementById('export-modal');
     if (modal && modal.getAttribute('aria-hidden') === 'false') {
-      // we need to dynamically refresh it, but it's fine just to re-call exportNotes if we can, or let user do it.
-      // Better yet, just close the window
+      exportNotes();
     }
-
-    this.close();
   }
 
   initDrag() {
@@ -403,21 +402,23 @@ export async function exportNotes() {
       const deleteBtn = e.target.closest('.em-btn-delete');
       if (deleteBtn) {
         const id = deleteBtn.getAttribute('data-id');
-        if (currentSession) {
-          try {
-            await fetch('/api/bookmarks', {
-              method: 'DELETE',
-              headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${currentSession.access_token}` },
-              body: JSON.stringify({ part_id: id })
-            });
-          } catch (err) { console.error(err); }
+        if (activeWindows.has(id)) {
+          await activeWindows.get(id).delete();
+        } else {
+          if (currentSession) {
+            try {
+              await fetch('/api/bookmarks', {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${currentSession.access_token}` },
+                body: JSON.stringify({ part_id: id })
+              });
+            } catch (err) { console.error(err); }
+          }
+          let local = JSON.parse(localStorage.getItem('anatomy101_bookmarks') || '[]');
+          local = local.filter(d => d.part_id !== id);
+          localStorage.setItem('anatomy101_bookmarks', JSON.stringify(local));
+          exportNotes(); // refresh modal
         }
-        let local = JSON.parse(localStorage.getItem('anatomy101_bookmarks') || '[]');
-        local = local.filter(d => d.part_id !== id);
-        localStorage.setItem('anatomy101_bookmarks', JSON.stringify(local));
-
-        if (activeWindows.has(id)) activeWindows.get(id).close();
-        exportNotes(); // refresh modal
         return;
       }
 
