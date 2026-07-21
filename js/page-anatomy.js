@@ -1,11 +1,17 @@
-import { renderChrome } from './chrome.js?v=1784447089342';
-import { initTheme } from './theme.js?v=1784447089342';
-import { SYSTEMS, SYS_HEX } from './config.js?v=1784447089342';
-import { GROUPS } from './data/groups.js?v=1784447089342';
-import { ANATOMY_STRUCTURES, SYSTEM_LIST, colourForStructure } from './data/anatomy.js?v=1784447089342';
+import { renderChrome } from './chrome.js?v=1784611432079';
+import { initTheme } from './theme.js?v=1784611432079';
+import { SYSTEMS, SYS_HEX } from './config.js?v=1784611432079';
+import { GROUPS } from './data/groups.js?v=1784611432079';
+import { ANATOMY_STRUCTURES, SYSTEM_LIST, colourForStructure } from './data/anatomy.js?v=1784611432079';
 
-renderChrome('anatomy');
-initTheme();
+import { initI18n } from './i18n.js?v=1784611432079';
+
+async function init() {
+  await initI18n();
+  renderChrome('anatomy');
+  initTheme();
+}
+init();
 
 // ── System overview cards (top section) ─────────────────────────────────────
 const systemGrid = document.getElementById('system-grid');

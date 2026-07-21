@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Anatomy101 - Notes Manager</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    :root {
+      --bg-main: #0B0F19;
+      --bg-panel: rgba(18, 22, 33, 0.65);
+      --text-primary: #ffffff;
+      --text-secondary: rgba(255, 255, 255, 0.6);
+      --border: rgba(255, 255, 255, 0.1);
+      --primary: #007AFF;
+      --danger: #ff453a;
+    }
+    body { 
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", "Helvetica Neue", sans-serif;
+      color: var(--text-primary); 
+      line-height: 1.6; 
+      margin: 0; 
+      padding: 0;
+      background: var(--bg-main);
+      min-height: 100vh;
+      /* Deep obsidian aesthetic without loud colors */
+    }
+    .container {
+      max-width: 800px; 
+      margin: 60px auto; 
+      padding: 40px;
+      background: var(--bg-panel);
+      backdrop-filter: blur(24px) saturate(180%);
+      -webkit-backdrop-filter: blur(24px) saturate(180%);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      box-shadow: 0 40px 80px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    }
+    h1 { 
+      font-weight: 700; 
+      letter-spacing: -0.02em; 
+      border-bottom: 1px solid var(--border); 
+      padding-bottom: 20px; 
+      margin-top: 0;
+      text-align: center;
+    }
+    .note-block { 
+      background: rgba(255, 255, 255, 0.02); 
+      border: 1px solid var(--border); 
+      border-radius: 16px; 
+      padding: 24px; 
+      margin-bottom: 20px; 
+      transition: transform 0.2s, background 0.2s, box-shadow 0.2s;
+      position: relative;
+    }
+    .note-block.dragging {
+      opacity: 0.4;
+    }
+    .note-block:hover {
+      background: rgba(255, 255, 255, 0.05);
+      box-shadow: 0 12px 32px rgba(0,0,0,0.4);
+    }
+    .note-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+    .note-title { 
+      font-size: 13px; 
+      text-transform: uppercase; 
+      letter-spacing: 0.08em; 
+      color: var(--text-secondary); 
+      font-weight: 600; 
+    }
+    .note-actions {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    .btn-action {
+      background: none;
+      border: none;
+      color: var(--text-secondary);
+      cursor: pointer;
+      padding: 6px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+    .btn-action:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: var(--text-primary);
+    }
+    .btn-action.delete:hover {
+      color: var(--danger);
+      background: rgba(255, 69, 58, 0.1);
+    }
+    .btn-action.save {
+      background: rgba(40, 200, 100, 0.2);
+      color: #28c864;
+    }
+    .drag-handle {
+      cursor: grab;
+      color: rgba(255, 255, 255, 0.3);
+      padding: 0 8px;
+      font-size: 18px;
+      line-height: 1;
+    }
+    .drag-handle:active {
+      cursor: grabbing;
+    }
+    
+    .note-content { 
+      font-size: 16px; 
+      white-space: pre-wrap; 
+      color: var(--text-primary);
+      outline: none;
+    }
+    .note-content[contenteditable="true"] {
+      background: rgba(0,0,0,0.2);
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.2);
+    }
+    
+    .actions-header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(11, 15, 25, 0.85);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border-bottom: 1px solid var(--border);
+      padding: 16px 24px;
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+    }
+    .btn { 
+      padding: 12px 24px; 
+      border-radius: 12px; 
+      border: 1px solid var(--border); 
+      cursor: pointer; 
+      font-weight: 600; 
+      font-size: 14px; 
+      text-decoration: none; 
+      display: inline-flex; 
+      align-items: center; 
+      justify-content: center;
+      transition: all 0.2s ease;
+      color: var(--text-primary);
+      background: rgba(255, 255, 255, 0.05);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
+    .btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+    }
+    .btn-print { background: var(--text-primary); color: #000; border: none; }
+    .btn-print:hover { background: #e0e0e0; }
+    
+    /* Compact Print Styling */
+    @media print {
+      body { background: #fff; color: #000; margin: 0; padding: 0; }
+      .container { background: transparent; border: none; box-shadow: none; padding: 0; margin: 0; max-width: none; backdrop-filter: none; }
+      h1 { border-bottom: 2px solid #000; font-size: 24px; padding-bottom: 8px; margin-bottom: 24px; text-align: left; }
+      .note-block { 
+        background: #fff; 
+        border: none;
+        border-bottom: 1px solid #eee;
+        border-radius: 0; 
+        padding: 12px 0; 
+        margin-bottom: 0; 
+        box-shadow: none; 
+        break-inside: avoid; 
+        transform: none !important; 
+      }
+      .note-header { margin-bottom: 8px; }
+      .note-title { color: #333; font-size: 11px; letter-spacing: 0.1em; }
+      .note-content { color: #000; font-size: 12px; }
+      .note-content[contenteditable="true"] { border: none; padding: 0; background: transparent; }
+      .actions-header, .no-print, .note-actions { display: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="actions-header no-print">
+    <button class="btn btn-print" onclick="window.print()">
+      <svg style="margin-right:8px" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2M6 14h12v8H6z"></path></svg>
+      Print / Save PDF
+    </button>
+    <a class="btn" id="btn-wa" href="#">WhatsApp</a>
+    <a class="btn" id="btn-mail" href="#">Email</a>
+  </div>
+  
+  <div class="container">
+    <h1>Anatomy101 Export</h1>
+    <div id="notes-list">Loading...</div>
+  </div>
+
+  <script type="module" src="js/export.js?v=1784611432079"></script>
+</body>
+</html>

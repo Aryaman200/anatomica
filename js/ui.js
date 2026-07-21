@@ -1,15 +1,16 @@
 import * as THREE from 'three';
-import { SYSTEMS, SYS_HEX } from './config.js?v=1784447089342';
-import { SYSTEM_NAME } from './data/anatomy.js?v=1784447089342';
-import { GROUP_BY_LABEL, groupsForStructure, isGroupLabel, isModelled } from './data/groups.js?v=1784447089342';
-import { scene, camera, controls, renderer, requestRender } from './scene.js?v=1784447089342';
-import { getGroups, searchIndex, getSearchIndex, bounds } from './loader.js?v=1784447089342';
-import { applyStyleToMaterial } from './style.js?v=1784447089342';
-import { getPartInfo } from './data/parts.js?v=1784447089342';
-import { CONDITIONS, getConditionsForPart, SEVERITY_LABEL, SEVERITY_COLOR, cleanDesc } from './data/conditions.js?v=1784447089342';
-import { getMedicationsForCondition, getMedicationsForOrgan } from './data/medications.js?v=1784447089342';
-import { getHabitsForOrgan } from './data/habits.js?v=1784447089342';
-import { startWalkthrough } from './walkthrough.js?v=1784447089342';
+import { SYSTEMS, SYS_HEX } from './config.js?v=1784611432079';
+import { SYSTEM_NAME } from './data/anatomy.js?v=1784611432079';
+import { GROUP_BY_LABEL, groupsForStructure, isGroupLabel, isModelled } from './data/groups.js?v=1784611432079';
+import { scene, camera, controls, renderer, requestRender, getCameraState } from './scene.js?v=1784611432079';
+import { getGroups, searchIndex, getSearchIndex, bounds } from './loader.js?v=1784611432079';
+import { applyStyleToMaterial } from './style.js?v=1784611432079';
+import { getPartInfo } from './data/parts.js?v=1784611432079';
+import { CONDITIONS, getConditionsForPart, SEVERITY_LABEL, SEVERITY_COLOR, cleanDesc } from './data/conditions.js?v=1784611432079';
+import { getMedicationsForCondition, getMedicationsForOrgan } from './data/medications.js?v=1784611432079';
+import { getHabitsForOrgan } from './data/habits.js?v=1784611432079';
+import { startWalkthrough } from './walkthrough.js?v=1784611432079';
+import { getSession } from './auth.js?v=1784611432079';
 
 /* ── SIDEBAR SYSTEM LIST ── */
 export const sysList   = document.getElementById('sys-list');
@@ -63,9 +64,27 @@ export function buildSidebar() {
 
   const btnAll = document.getElementById('btn-all');
   const btnNone = document.getElementById('btn-none');
+  const btnShare = document.getElementById('btn-share');
   
   if(btnAll) btnAll.addEventListener('click', resetAll);
   if(btnNone) btnNone.addEventListener('click', hideAll);
+  if(btnShare) btnShare.addEventListener('click', async () => {
+    const camStr = getCameraState();
+    const activeLayers = SYSTEMS.filter(s => s.active).map(s => s.id).join(',');
+    const url = new URL(location.href);
+    url.searchParams.set('cam', camStr);
+    url.searchParams.set('layers', activeLayers);
+    
+    // Copy to clipboard
+    try {
+      await navigator.clipboard.writeText(url.toString());
+      const orig = btnShare.textContent;
+      btnShare.textContent = 'Copied!';
+      setTimeout(() => { btnShare.textContent = orig; }, 2000);
+    } catch (e) {
+      alert('Failed to copy. URL: ' + url.toString());
+    }
+  });
 
   updateBadge();
 }
@@ -457,6 +476,16 @@ export function openPartPanel(label, sysId) {
     ${pillSection(`Conditions affecting this part (${conditions.length})`, conditions.map(c => c.name), 'cond')}
     ${pillSection('Medications acting here', meds.map(m => m.name), 'med')}
     ${pillSection('What keeps it healthy', habits.map(h => h.name), 'habit')}
+    
+    <div class="dp-section" style="margin-top: 24px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.1);">
+      <button id="part-notes-btn" class="btn-add-note">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+        </svg>
+        Add / Edit Note for this Part
+      </button>
+    </div>
   `;
 
   dpScroll.querySelectorAll('[data-group="cond"]').forEach((btn, i) => {
@@ -468,6 +497,15 @@ export function openPartPanel(label, sysId) {
   dpScroll.querySelectorAll('[data-group="habit"]').forEach((btn, i) => {
     btn.addEventListener('click', () => openHabitPanel(habits[i]));
   });
+
+  const notesBtn = dpScroll.querySelector('#part-notes-btn');
+  if (notesBtn) {
+    notesBtn.addEventListener('click', () => {
+      import('./notes.js?v=1784611432079').then(m => {
+        m.openNotesWidget(label);
+      });
+    });
+  }
 
   detailPanel.classList.remove('wt-collapsed');
   detailPanel.classList.add('open');

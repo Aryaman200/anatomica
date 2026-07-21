@@ -1,6 +1,7 @@
-import { initAssistant } from './assistant.js';
-import { getSession, logout, loginWithGoogle, onAuthStateChange } from './auth.js';
-import { checkout } from './payment.js';
+import { initAssistant } from './assistant.js?v=1784611432079';
+import { getSession, logout, loginWithGoogle, onAuthStateChange } from './auth.js?v=1784611432079';
+import { checkout } from './payment.js?v=1784611432079';
+import { t } from './i18n.js?v=1784611432079';
 
 // Escape any server-provided string before it goes into innerHTML.
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) =>
@@ -19,13 +20,13 @@ function _renderAuthSlots(header, session) {
     ? `<div class="nav-auth-group">
          <button class="nav-btn-glass btn-account">
            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-           <span>Account</span>
+           <span>${t('nav_account') || 'Account'}</span>
          </button>
          <button class="nav-btn-glass btn-logout nav-logout-btn">
            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
          </button>
        </div>`
-    : `<button class="nav-btn-primary nav-login-btn">Log in</button>`;
+    : `<button class="nav-btn-primary nav-login-btn">${t('nav_login') || 'Log in'}</button>`;
 
   authSlot.innerHTML = authHTML;
   if (mobileAuthSlot) mobileAuthSlot.innerHTML = authHTML;
@@ -39,12 +40,12 @@ const AI_ICON = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stro
   <circle cx="12" cy="12" r="3.4"/>
 </svg>`;
 
-const NAV_ITEMS = [
-  { href: 'index.html',       label: 'Explore',      page: 'explore' },
-  { href: 'conditions.html',  label: 'Conditions',   page: 'conditions' },
-  { href: 'medications.html', label: 'Medications',  page: 'medications' },
-  { href: 'anatomy.html',     label: 'Anatomy',      page: 'anatomy' },
-  { href: 'quiz.html',        label: 'Quiz',         page: 'quiz' },
+const getNavItems = () => [
+  { href: 'index.html',       label: t('nav_explore'),      page: 'explore' },
+  { href: 'conditions.html',  label: t('nav_conditions'),   page: 'conditions' },
+  { href: 'medications.html', label: t('nav_medications'),  page: 'medications' },
+  { href: 'anatomy.html',     label: t('nav_anatomy') || 'Anatomy',      page: 'anatomy' },
+  { href: 'quiz.html',        label: t('nav_quiz'),         page: 'quiz' }
 ];
 
 export function renderChrome(activePage) {
@@ -57,11 +58,11 @@ export function renderChrome(activePage) {
           <span>Anatomy101</span>
         </a>
         <nav class="nav-links" role="navigation" aria-label="Main">
-          ${NAV_ITEMS.map(it => `<a href="${it.href}" class="${it.page === activePage ? 'active' : ''}">${it.label}</a>`).join('')}
+          ${getNavItems().map(it => `<a href="${it.href}" ${it.id ? `id="${it.id}"` : ''} class="${it.page === activePage ? 'active' : ''}">${it.label}</a>`).join('')}
         </nav>
         <div class="nav-right">
           <button class="nav-ai" data-ai-open aria-expanded="false" aria-controls="ai-panel">
-            ${AI_ICON}<span>Ask AI</span>
+            ${AI_ICON}<span>${t('nav_ask_ai') || 'Ask AI'}</span>
           </button>
           <div id="nav-auth-slot"></div>
           <button class="nav-burger" id="nav-burger" aria-label="Open menu" aria-expanded="false">
@@ -70,18 +71,23 @@ export function renderChrome(activePage) {
         </div>
       </div>
       <div class="nav-mobile-menu" id="nav-mobile-menu" aria-hidden="true">
-        ${NAV_ITEMS.map(it => `<a href="${it.href}" class="${it.page === activePage ? 'active' : ''}">${it.label}</a>`).join('')}
+        ${getNavItems().map(it => `<a href="${it.href}" ${it.id ? `id="${it.id}-mobile"` : ''} class="${it.page === activePage ? 'active' : ''}">${it.label}</a>`).join('')}
         <button class="nav-ai" data-ai-open aria-expanded="false" aria-controls="ai-panel">
-          ${AI_ICON}<span>Ask AI</span>
+          ${AI_ICON}<span>${t('nav_ask_ai') || 'Ask AI'}</span>
         </button>
         <div id="nav-mobile-auth-slot"></div>
       </div>
     `;
 
-    // Show "Log in" button immediately on first paint — no async gap on mobile
+    // Show "Log in" button immediately on first paint
     _renderAuthSlots(header, null);
-    // Then check real session; update only if user is already logged in
-    getSession().then(session => { if (session) _renderAuthSlots(header, session); });
+    
+    // Check real session
+    getSession().then(async session => { 
+      if (session) {
+        _renderAuthSlots(header, session);
+      }
+    });
 
     // Re-render auth slot when GIS popup login completes (no page reload)
     onAuthStateChange((event, session) => _renderAuthSlots(header, session));
@@ -119,7 +125,7 @@ export function renderChrome(activePage) {
         </div>
         <div class="footer-col">
           <div class="footer-heading">Product</div>
-          ${NAV_ITEMS.map(it => `<a href="${it.href}">${it.label}</a>`).join('')}
+          ${getNavItems().map(it => `<a href="${it.href}">${it.label}</a>`).join('')}
         </div>
         <div class="footer-col">
           <div class="footer-heading">About</div>
@@ -175,6 +181,12 @@ export function renderChrome(activePage) {
 
   // Biology assistant — mounts its own panel + stylesheet, wires [data-ai-open].
   initAssistant();
+
+  if (!window._chromeI18nListenersAttached) {
+    window._chromeI18nListenersAttached = true;
+    window.addEventListener('anatomy101-lang-changed', () => renderChrome(activePage));
+    window.addEventListener('anatomy101-i18n-ready', () => renderChrome(activePage));
+  }
 }
 
 async function openAccountModal(session) {

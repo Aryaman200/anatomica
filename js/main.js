@@ -2,15 +2,16 @@ import {
   buildSidebar, initSearchUI, initClippingUI, initDetailPanel,
   applyHighlight, openPartPanel, openConditionPanel, openMedicationPanel,
   hideAll, toggleSystem, initSidebarToggle,
-} from './ui.js?v=1784447089342';
-import { loadAll, getSearchIndex } from './loader.js?v=1784447089342';
-import { requestRender } from './scene.js?v=1784447089342';
-import { initInspect } from './inspect.js?v=1784447089342';
-import { initStyleUI } from './style.js?v=1784447089342';
-import { initTheme } from './theme.js?v=1784447089342';
-import { CONDITIONS } from './data/conditions.js?v=1784447089342';
-import { MEDICATIONS } from './data/medications.js?v=1784447089342';
-import { ANATOMY_TERMS } from './config.js?v=1784447089342';
+} from './ui.js?v=1784611432079';
+import { loadAll, getSearchIndex } from './loader.js?v=1784611432079';
+import { requestRender, setCameraState } from './scene.js?v=1784611432079';
+import { initInspect } from './inspect.js?v=1784611432079';
+import { initStyleUI } from './style.js?v=1784611432079';
+import { initTheme } from './theme.js?v=1784611432079';
+import { CONDITIONS } from './data/conditions.js?v=1784611432079';
+import { MEDICATIONS } from './data/medications.js?v=1784611432079';
+import { ANATOMY_TERMS } from './config.js?v=1784611432079';
+import { initLangUI } from './langUI.js?v=1784611432079';
 
 function applyDeepLink() {
   const params = new URLSearchParams(location.search);
@@ -19,6 +20,17 @@ function applyDeepLink() {
   const medName        = params.get('med');
   const partLabel       = params.get('part');
   const systemId         = params.get('system');
+  const cam              = params.get('cam');
+  const layers           = params.get('layers');
+
+  if (cam) {
+    setCameraState(cam);
+  }
+  
+  if (layers) {
+    hideAll();
+    layers.split(',').forEach(id => toggleSystem(id));
+  }
 
   if (conditionName) {
     const cond = CONDITIONS.find(c => c.name === conditionName);
@@ -38,7 +50,10 @@ function applyDeepLink() {
   }
 }
 
-function init() {
+import { initI18n } from './i18n.js?v=1784611432079';
+
+async function init() {
+  await initI18n();
   // Build sidebar DOM
   buildSidebar();
 
@@ -50,6 +65,27 @@ function init() {
   initStyleUI();
   initTheme();
   initSidebarToggle();
+  initLangUI();
+
+  import('./notes.js?v=1784611432079').then(m => {
+    m.initNotesWidget();
+    
+    const fabAdd = document.getElementById('notes-fab-add');
+    if (fabAdd) {
+      fabAdd.addEventListener('click', (e) => {
+        e.preventDefault();
+        m.openNotesWidget('global');
+      });
+    }
+    
+    const fabExport = document.getElementById('notes-fab-export');
+    if (fabExport) {
+      fabExport.addEventListener('click', (e) => {
+        e.preventDefault();
+        m.exportNotes();
+      });
+    }
+  });
 
   // Load GLTFs and start rendering
   loadAll(() => {

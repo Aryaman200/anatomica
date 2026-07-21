@@ -1,9 +1,15 @@
-import { renderChrome } from './chrome.js?v=1784447089342';
-import { initTheme } from './theme.js?v=1784447089342';
-import { MEDICATIONS, MED_GROUPS } from './data/medications.js?v=1784447089342';
+import { renderChrome } from './chrome.js?v=1784611432079';
+import { initTheme } from './theme.js?v=1784611432079';
+import { MEDICATIONS, MED_GROUPS } from './data/medications.js?v=1784611432079';
 
-renderChrome('medications');
-initTheme();
+import { initI18n } from './i18n.js?v=1784611432079';
+
+async function init() {
+  await initI18n();
+  renderChrome('medications');
+  initTheme();
+}
+init();
 
 const grid    = document.getElementById('med-grid');
 const countEl = document.getElementById('results-count');
@@ -19,11 +25,13 @@ function renderChips() {
   MEDICATIONS.forEach(m => groupCounts.set(m.group, (groupCounts.get(m.group) || 0) + 1));
   const groups = MED_GROUPS.filter(g => groupCounts.has(g));
 
-  chipGroup.innerHTML = groups.map(g => `
+  chipGroup.innerHTML = groups.map(g => {
+    const translatedGroup = typeof window.t === 'function' ? window.t(g) : g;
+    return `
     <button class="chip${activeGroup === g ? ' active' : ''}" data-group="${g}" aria-pressed="${activeGroup === g}">
-      ${g} <span class="chip-count">${groupCounts.get(g)}</span>
+      ${translatedGroup} <span class="chip-count">${groupCounts.get(g)}</span>
     </button>
-  `).join('');
+  `}).join('');
 
   chipGroup.querySelectorAll('.chip').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -48,12 +56,21 @@ function renderGrid() {
     const conds  = m.conditions || [];
     const organs = m.organs     || [];
     const cls    = m.class      || '';
+    
+    const translatedName = typeof window.t === 'function' ? window.t(m.name) : m.name;
+    const translatedGroup = typeof window.t === 'function' ? window.t(m.group) : m.group;
+    const translatedCls = typeof window.t === 'function' && cls ? window.t(cls) : cls;
+    
+    // We can also translate the hardcoded strings using t() if we add them to translations
+    const actsOnText = typeof window.t === 'function' ? window.t('acts_on') || 'Acts on' : 'Acts on';
+    const condText = typeof window.t === 'function' ? window.t('linked_conditions') || 'linked conditions' : 'linked conditions';
+    
     return `
     <a class="card" style="--accent:#5b8cff;" href="index.html?med=${encodeURIComponent(m.name)}">
-      <div class="card-badge" style="color:#5b8cff;border-color:#5b8cff55;">${m.group}</div>
-      <div class="card-title">${m.name}</div>
-      <div class="card-desc">${cls}${cls ? '. ' : ''}Acts on ${organs.join(', ')}.</div>
-      <div class="card-meta"><span>${conds.length} linked condition${conds.length === 1 ? '' : 's'}</span></div>
+      <div class="card-badge" style="color:#5b8cff;border-color:#5b8cff55;">${translatedGroup}</div>
+      <div class="card-title">${translatedName}</div>
+      <div class="card-desc">${translatedCls}${translatedCls ? '. ' : ''}${actsOnText} ${organs.map(o => typeof window.t === 'function' ? window.t(o) : o).join(', ')}.</div>
+      <div class="card-meta"><span>${conds.length} ${condText}</span></div>
     </a>
   `;
   }).join('');
@@ -63,3 +80,12 @@ searchInput.addEventListener('input', () => { query = searchInput.value; renderG
 
 renderChips();
 renderGrid();
+
+window.addEventListener('anatomy101-lang-changed', () => {
+  renderChips();
+  renderGrid();
+});
+window.addEventListener('anatomy101-i18n-ready', () => {
+  renderChips();
+  renderGrid();
+});

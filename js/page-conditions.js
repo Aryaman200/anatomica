@@ -1,9 +1,15 @@
-import { renderChrome } from './chrome.js?v=1784447089342';
-import { initTheme } from './theme.js?v=1784447089342';
-import { CONDITIONS, getFeaturedConditions, SEVERITY_LABEL, SEVERITY_COLOR, cleanDesc } from './data/conditions.js?v=1784447089342';
+import { renderChrome } from './chrome.js?v=1784611432079';
+import { initTheme } from './theme.js?v=1784611432079';
+import { CONDITIONS, getFeaturedConditions, SEVERITY_LABEL, SEVERITY_COLOR, cleanDesc } from './data/conditions.js?v=1784611432079';
 
-renderChrome('conditions');
-initTheme();
+import { initI18n } from './i18n.js?v=1784611432079';
+
+async function init() {
+  await initI18n();
+  renderChrome('conditions');
+  initTheme();
+}
+init();
 
 const grid    = document.getElementById('cond-grid');
 const countEl = document.getElementById('results-count');
@@ -16,12 +22,16 @@ const featuredRail = document.getElementById('featured-rail');
 
 function cardHtml(c) {
   const color = SEVERITY_COLOR[c.severity];
+  const translatedName = typeof window.t === 'function' ? window.t(c.name) : c.name;
+  const translatedDesc = typeof window.t === 'function' ? window.t(c.desc) : c.desc;
+  const translatedCategory = typeof window.t === 'function' ? window.t(c.category) : c.category;
+  
   return `
     <a class="card" style="--accent:${color};" href="index.html?condition=${encodeURIComponent(c.name)}">
       <div class="card-badge" style="color:${color};border-color:${color}55;">${SEVERITY_LABEL[c.severity]}</div>
-      <div class="card-title">${c.name}</div>
-      <div class="card-desc">${cleanDesc(c.desc, 140)}</div>
-      <div class="card-meta"><span>${c.category}</span><span>${c.parts.length} structure${c.parts.length === 1 ? '' : 's'}</span></div>
+      <div class="card-title">${translatedName}</div>
+      <div class="card-desc">${cleanDesc(translatedDesc, 140)}</div>
+      <div class="card-meta"><span>${translatedCategory}</span><span>${c.parts.length} structure${c.parts.length === 1 ? '' : 's'}</span></div>
     </a>`;
 }
 
@@ -44,19 +54,24 @@ function counts(getKey) {
 
 function renderChips() {
   const sevCounts = counts(c => c.severity);
-  chipSeverity.innerHTML = ['urgent', 'watch', 'info'].map(sev => `
+  chipSeverity.innerHTML = ['urgent', 'watch', 'info'].map(sev => {
+    const label = SEVERITY_LABEL[sev];
+    const translatedLabel = typeof window.t === 'function' ? window.t(label) : label;
+    return `
     <button class="chip${activeSeverity === sev ? ' active' : ''}" data-sev="${sev}" aria-pressed="${activeSeverity === sev}">
-      ${SEVERITY_LABEL[sev]} <span class="chip-count">${sevCounts.get(sev) || 0}</span>
+      ${translatedLabel} <span class="chip-count">${sevCounts.get(sev) || 0}</span>
     </button>
-  `).join('');
+  `}).join('');
 
   const catCounts = counts(c => c.category);
   const cats = [...catCounts.keys()].sort((a, b) => catCounts.get(b) - catCounts.get(a));
-  chipCategory.innerHTML = cats.map(cat => `
+  chipCategory.innerHTML = cats.map(cat => {
+    const translatedCat = typeof window.t === 'function' ? window.t(cat) : cat;
+    return `
     <button class="chip${activeCategory === cat ? ' active' : ''}" data-cat="${cat}" aria-pressed="${activeCategory === cat}">
-      ${cat} <span class="chip-count">${catCounts.get(cat)}</span>
+      ${translatedCat} <span class="chip-count">${catCounts.get(cat)}</span>
     </button>
-  `).join('');
+  `}).join('');
 
   chipSeverity.querySelectorAll('.chip').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -91,3 +106,14 @@ searchInput.addEventListener('input', () => { query = searchInput.value; renderG
 renderFeatured();
 renderChips();
 renderGrid();
+
+window.addEventListener('anatomy101-lang-changed', () => {
+  renderFeatured();
+  renderChips();
+  renderGrid();
+});
+window.addEventListener('anatomy101-i18n-ready', () => {
+  renderFeatured();
+  renderChips();
+  renderGrid();
+});
