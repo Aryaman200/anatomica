@@ -66,6 +66,11 @@
       <p class="gate-sub">Free to use. Sign in to start exploring — takes 5 seconds.</p>
     </div>
   </div>
+  <script>
+    if (localStorage.getItem('sb-macwmsnpioiktcgkisbs-auth-token')) {
+      document.getElementById('auth-gate').style.display = 'none';
+    }
+  </script>
   <script type="module">
     import { initAuthGate } from './js/authGate.js?v=1784616405415';
     initAuthGate();

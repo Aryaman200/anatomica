@@ -76,7 +76,11 @@ export async function initAuthGate() {
   const gate = document.getElementById('auth-gate');
   if (!gate) return;
 
-  setBackgroundInert(true); // fail-closed default, matches the gate's visible-by-default markup
+  // If the inline script didn't hide it, it means they definitely don't have a token.
+  // Fail-closed default.
+  if (gate.style.display !== 'none') {
+    setBackgroundInert(true);
+  }
 
   let showcaseTimer = null;
   let revealed = false;
@@ -92,6 +96,12 @@ export async function initAuthGate() {
 
   const session = await getSession();
   if (session) { reveal(); return; }
+
+  // Not signed in — show the gate in case the inline script optimistically hid it!
+  if (gate.style.display === 'none') {
+    gate.style.display = '';
+    setBackgroundInert(true);
+  }
 
   // Not signed in — stay gated, run the showcase, and wait for auth to land
   // (either via the gate's own button or the header's login button — both
