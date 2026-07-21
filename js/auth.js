@@ -1,4 +1,4 @@
-import { supabase } from './supabase-client.js';
+import { supabase } from './supabase-client.js?v=1784611432079';
 
 // Google Client ID — safe to expose in browser (public identifier, like Supabase anon key)
 const GOOGLE_CLIENT_ID = '458133157931-jn2vrkh1hf73pue337o4a1bg70hunl8o.apps.googleusercontent.com';
@@ -31,6 +31,7 @@ function _initGIS() {
   google.accounts.id.initialize({
     client_id: GOOGLE_CLIENT_ID,
     nonce: _hashedNonce, // SHA-256 hash — Google embeds this in the ID token
+    use_fedcm_for_prompt: true, // FedCM: One Tap via the browser's native credential UI (clears the GIS deprecation warning)
     callback: async (response) => {
       const cb = _pendingCb;
       _pendingCb = null;
@@ -113,14 +114,44 @@ export async function loginWithGoogle() {
   _initGIS();           // safe to call — idempotent, uses _hashedNonce
 
   return new Promise((resolve) => {
-    _pendingCb = (err, session) => resolve(session);
+    let settled = false;
+    let fallbackTimer = null;
 
-    google.accounts.id.prompt((notification) => {
-      if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
-        // One Tap suppressed — use fallback modal with rendered Google button
-        _showFallbackModal();
-      }
-    });
+    // Success path: initialize()'s credential callback → _pendingCb → finish().
+    const finish = (session) => {
+      if (settled) return;
+      settled = true;
+      if (fallbackTimer) clearTimeout(fallbackTimer);
+      resolve(session);
+    };
+    _pendingCb = (err, session) => finish(session);
+
+    // Reachable fallback: render Google's official button in a modal so users
+    // on browsers that suppress One Tap can still sign in. _showFallbackModal
+    // wraps _pendingCb, so completing the modal still routes through finish().
+    const showFallback = () => {
+      if (settled) return;
+      if (fallbackTimer) { clearTimeout(fallbackTimer); fallbackTimer = null; }
+      _showFallbackModal();
+    };
+
+    try {
+      // FedCM: call prompt() WITHOUT a moment-notification callback. Under
+      // use_fedcm_for_prompt the moment methods (isNotDisplayed /
+      // isSkippedMoment / getNotDisplayedReason) are removed and throw if
+      // called, so we no longer inspect the notification at all — the
+      // credential arrives via the initialize() callback instead.
+      google.accounts.id.prompt();
+
+      // If the browser suppresses One Tap (FedCM disabled, prior dismissals,
+      // unsupported browser) the prompt never yields a credential and never
+      // resolves. When it doesn't resolve in time, surface the fallback modal.
+      fallbackTimer = setTimeout(showFallback, 3000);
+    } catch (e) {
+      // Some environments throw synchronously when FedCM can't start.
+      console.warn('GIS FedCM prompt failed; showing fallback modal:', e);
+      showFallback();
+    }
   });
 }
 

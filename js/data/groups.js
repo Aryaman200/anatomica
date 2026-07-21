@@ -14,7 +14,7 @@
 //  modelled:false: conditions may still reference it, but it is never shown in
 //  anatomy search and highlights render as "not individually modelled".
 // ============================================================================
-import { ANATOMY_STRUCTURES } from './anatomy.js?v=1784447089342';
+import { ANATOMY_STRUCTURES } from './anatomy.js?v=1784611432079';
 
 // system:'*' (or omitted) = match across every system.
 const DEFS = [

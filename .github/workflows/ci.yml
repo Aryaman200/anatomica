@@ -1,0 +1,35 @@
+name: CI
+
+on:
+  push:
+    branches: [dev, master]
+  pull_request:
+    branches: [dev, master]
+
+jobs:
+  test:
+    name: Lint syntax + unit tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Syntax-check every file under api/ and lib/
+        run: |
+          set -e
+          for f in $(find api lib -type f -name '*.js'); do
+            echo "node --check $f"
+            node --check "$f"
+          done
+
+      - name: Run unit tests
+        run: npm test

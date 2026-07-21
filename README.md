@@ -323,6 +323,30 @@ Each condition carries:
 
 ---
 
+## 🔔 Razorpay webhook
+
+Payments are normally settled when the browser calls `api/subscription/verify.js`
+after checkout. The webhook at `api/subscription/webhook.js` is the server-side
+safety net: it settles a paid order even if the browser closes before verify
+runs. To enable it:
+
+1. **Set the signing secret in Vercel** — add an env var
+   `RAZORPAY_WEBHOOK_SECRET` (Project → Settings → Environment Variables). This
+   must match the secret you enter in the Razorpay dashboard. The endpoint
+   verifies `x-razorpay-signature` = `HMAC-SHA256(rawBody, RAZORPAY_WEBHOOK_SECRET)`
+   and rejects (400) any request whose signature does not match.
+2. **Register the webhook in Razorpay** — Dashboard → Settings → Webhooks →
+   Add New Webhook:
+   - **URL:** `https://anatomy101.in/api/subscription/webhook`
+   - **Active events:** `order.paid` and `payment.captured`
+   - **Secret:** the same value as `RAZORPAY_WEBHOOK_SECRET`
+
+The tier granted is always read from the stored `orders` row (never from the
+webhook payload), and the handler is idempotent — unknown or already-`paid`
+orders return `200` so Razorpay stops retrying.
+
+---
+
 ## 📄 License
 
 ISC © Aryaman

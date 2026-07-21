@@ -7,7 +7,8 @@
     "doc": "docs"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node --test",
+    "build": "node scripts/gen-quiz-data.mjs"
   },
   "repository": {
     "type": "git",
@@ -23,6 +24,7 @@
   "homepage": "https://github.com/Aryaman200/anatomy101#readme",
   "dependencies": {
     "@supabase/supabase-js": "^2.110.7",
+    "@vitalets/google-translate-api": "^9.2.1",
     "mongodb": "^7.5.0",
     "razorpay": "^2.9.5"
   }

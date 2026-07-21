@@ -24,6 +24,12 @@ neet-biology-db/analytics/
 neet-biology-db/graph/
 neet-biology-db/indexes/
 neet-biology-db/questions/
+neet-biology-db/pdfs/
+neet-physics-db/questions/
+neet-chemistry-db/questions/
+
+# Python bytecode cache
+__pycache__/
 
 # ── Editor & IDE ──────────────────────────────────────────────────────────────
 .vscode/

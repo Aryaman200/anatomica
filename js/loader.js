@@ -3,10 +3,10 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 import { MeshoptDecoder } from 'https://cdn.jsdelivr.net/npm/three@0.165.0/examples/jsm/libs/meshopt_decoder.module.js';
 
-import { scene, requestRender } from './scene.js?v=1784447089342';
-import { SYSTEMS } from './config.js?v=1784447089342';
-import { cleanLabel, colourForStructure, ANATOMY_STRUCTURES, labelFingerprint } from './data/anatomy.js?v=1784447089342';
-import { GROUPS } from './data/groups.js?v=1784447089342';
+import { scene, requestRender } from './scene.js?v=1784611432079';
+import { SYSTEMS } from './config.js?v=1784611432079';
+import { cleanLabel, colourForStructure, ANATOMY_STRUCTURES, labelFingerprint } from './data/anatomy.js?v=1784611432079';
+import { GROUPS } from './data/groups.js?v=1784611432079';
 
 // Fingerprint → pretty taxonomy label. Recovers the space-separated names
 // after THREE's GLTFLoader has sanitized GLB node names to underscore blobs.
@@ -187,7 +187,12 @@ export async function loadAll(onComplete) {
     }
   }
   
-  setTimeout(() => { if(loaderEl) loaderEl.classList.add('hidden'); }, 350);
+  setTimeout(() => { 
+    if(loaderEl) {
+      loaderEl.classList.add('hidden'); 
+      window.dispatchEvent(new Event('anatomy101-loaded'));
+    }
+  }, 350);
   setTimeout(() => { 
     const hint = document.getElementById('hint');
     if(hint) hint.classList.add('gone'); 
