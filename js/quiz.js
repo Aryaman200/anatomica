@@ -1,9 +1,9 @@
 /* quiz.js — NEET Biology Quiz Engine */
 'use strict';
 
-import { getSession, loginWithGoogle } from './auth.js?v=1784613961254';
-import { checkout, showPremiumModal } from './payment.js?v=1784613961254';
-import { topicFor, analyze } from './feedback.js?v=1784613961254';
+import { getSession, loginWithGoogle } from './auth.js?v=1784616405415';
+import { checkout, showPremiumModal } from './payment.js?v=1784616405415';
+import { topicFor, analyze } from './feedback.js?v=1784616405415';
 
 let session = null;
 let userState = null;
@@ -180,6 +180,37 @@ function wireChipGroups() {
   }
 }
 
+// ── Fix mis-parsed "choose the correct statements" questions ────
+// Some PDF-extracted questions have their lettered statement preamble
+// (A/B/C/D … "choose from options below") dumped into the SAME options array
+// as the real final answer choices, which also start back at A/B/C/D — e.g.
+// options = [A,B,C,D (statements), A,B,C,D (real choices)], 8 entries total
+// with duplicate ids. Detected on ~219/3152 questions. Fix: fold everything
+// before the real choices into the question text, keep only the final block
+// (the LAST occurrence of the first option's id onward) as clickable options.
+function normalizeQuestionOptions(q) {
+  const opts = q.options;
+  if (!opts || opts.length <= 4) return q;
+
+  const firstId = opts[0].id;
+  let splitIdx = -1;
+  for (let i = opts.length - 1; i > 0; i--) {
+    if (opts[i].id === firstId) { splitIdx = i; break; }
+  }
+  if (splitIdx === -1) return q; // no duplicate — a genuinely >4-option question
+
+  const preamble = opts.slice(0, splitIdx);
+  const realOptions = opts.slice(splitIdx);
+  if (realOptions.length < 2) return q; // sanity guard against over-splitting
+
+  const preambleText = preamble.map(o => `${o.id}. ${o.text}`).join('\n');
+  return {
+    ...q,
+    question: { ...q.question, text: `${q.question.text}\n${preambleText}` },
+    options: realOptions,
+  };
+}
+
 // ── Difficulty heuristic (all DB questions stored as 'Medium' placeholder) ──
 // Thresholds derived from actual text-length percentiles across all 554 questions:
 //   p50 = 82 chars  → Easy/Medium boundary
@@ -320,7 +351,7 @@ async function beginSession(pool) {
   }
 
   const count = Math.min(state.settings.count, selected.length);
-  state.quizQuestions = selected.slice(0, count);
+  state.quizQuestions = selected.slice(0, count).map(normalizeQuestionOptions);
   state.currentIndex  = 0;
   state.answers       = [];
 

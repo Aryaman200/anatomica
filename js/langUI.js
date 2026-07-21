@@ -1,4 +1,4 @@
-import { setLanguage, getCurrentLang } from './i18n.js?v=1784613961254';
+import { setLanguage, getCurrentLang } from './i18n.js?v=1784616405415';
 
 export function initLangUI() {
   const toggle = document.getElementById('lang-toggle');

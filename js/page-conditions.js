@@ -1,8 +1,8 @@
-import { renderChrome } from './chrome.js?v=1784613961254';
-import { initTheme } from './theme.js?v=1784613961254';
-import { CONDITIONS, getFeaturedConditions, SEVERITY_LABEL, SEVERITY_COLOR, cleanDesc } from './data/conditions.js?v=1784613961254';
+import { renderChrome } from './chrome.js?v=1784616405415';
+import { initTheme } from './theme.js?v=1784616405415';
+import { CONDITIONS, getFeaturedConditions, SEVERITY_LABEL, SEVERITY_COLOR, cleanDesc } from './data/conditions.js?v=1784616405415';
 
-import { initI18n } from './i18n.js?v=1784613961254';
+import { initI18n } from './i18n.js?v=1784616405415';
 
 async function init() {
   await initI18n();

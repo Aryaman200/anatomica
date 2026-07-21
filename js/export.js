@@ -1,5 +1,5 @@
-import { getSession } from './auth.js?v=1784613961254';
-import { initI18n, t } from './i18n.js?v=1784613961254';
+import { getSession } from './auth.js?v=1784616405415';
+import { initI18n, t } from './i18n.js?v=1784616405415';
 
 let currentSession = null;
 let notes = [];
