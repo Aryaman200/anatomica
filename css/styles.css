@@ -2162,13 +2162,63 @@ body {
   border-color: rgba(255, 255, 255, 0.2);
 }
 
+/* ─────────────────────────────────────────────
+   MODEL CREDIT PILL
+───────────────────────────────────────────── */
+#model-credit-pill {
+  position: fixed;
+  bottom: 24px;
+  left: 84px;
+  z-index: 1001;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 48px;
+  padding: 0 18px;
+  background: transparent;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid #ff4d4d;
+  border-radius: 24px;
+  color: #ff4d4d;
+  font-family: var(--font-brand);
+  font-size: var(--text-xs);
+  font-weight: var(--fw-medium);
+  text-decoration: none;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  box-shadow: 0 4px 16px rgba(255, 77, 77, 0.15);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+#model-credit-pill:hover {
+  background: rgba(255, 77, 77, 0.12);
+  border-color: #ff6666;
+  color: #ff6666;
+  box-shadow: 0 6px 20px rgba(255, 77, 77, 0.28);
+  transform: translateY(-2px);
+}
+
+#model-credit-pill:active {
+  transform: translateY(0);
+}
+
 @media (max-width: 768px) {
   #notes-fab-container,
   #notes-container,
   .btn-add-note {
     display: none !important;
   }
+
+  #model-credit-pill {
+    left: 16px;
+    bottom: 16px;
+    height: 40px;
+    padding: 0 14px;
+    font-size: 11px;
+  }
 }
+
 
 
 
