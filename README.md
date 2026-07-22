@@ -15,8 +15,15 @@ Explore every bone, vessel, nerve, and organ in real-time 3D. Search 2,587 clini
 [![JavaScript](https://img.shields.io/badge/JavaScript-ES2022-f7df1e?logo=javascript&logoColor=black&style=flat-square)](https://developer.mozilla.org/en-US/docs/Web/JavaScript)
 [![Three.js](https://img.shields.io/badge/Three.js-r165-black?logo=three.js&style=flat-square)](https://threejs.org/)
 [![WebGL](https://img.shields.io/badge/WebGL-2.0-990000?logo=webgl&logoColor=white&style=flat-square)](https://www.khronos.org/webgl/)
+[![Z-Anatomy](https://img.shields.io/badge/3D%20Models-Z--Anatomy-ff4d4d?style=flat-square)](https://docs.google.com/document/d/1peWW_7IiVgTTAwcI_auv38YSJ6qGWRuTMxzzhkRpXIk/edit?pli=1&tab=t.0)
 [![Data](https://img.shields.io/badge/NIH%20MedQuAD-2%2C587%20conditions-38bdf8?style=flat-square)](https://github.com/abachaa/MedQuAD)
 [![License](https://img.shields.io/badge/License-ISC-a78bfa?style=flat-square)](LICENSE)
+
+<br/>
+
+> **🙏 Special Thanks to Z-Anatomy**  
+> 3D anatomy models are sourced from **Z-Anatomy**. Huge thanks to the **Z-Anatomy team** for their incredible open 3D human anatomy dataset!  
+> 📄 Read the [Z-Anatomy Model License](https://docs.google.com/document/d/1peWW_7IiVgTTAwcI_auv38YSJ6qGWRuTMxzzhkRpXIk/edit?pli=1&tab=t.0).
 
 <br/>
 
@@ -347,9 +354,12 @@ orders return `200` so Razorpay stops retrying.
 
 ---
 
-## 📄 License
+## 📄 License & Acknowledgements
 
-ISC © Aryaman
+- **Application Code:** ISC © Aryaman
+- **3D Anatomy Models & Assets:** Sourced from **[Z-Anatomy](https://www.z-anatomy.com/)**. Special thanks to the **Z-Anatomy team** for creating and publishing their open 3D human anatomy dataset!
+- **Z-Anatomy Model License:** [View Z-Anatomy License Document](https://docs.google.com/document/d/1peWW_7IiVgTTAwcI_auv38YSJ6qGWRuTMxzzhkRpXIk/edit?pli=1&tab=t.0)
+
 
 ---
 
